@@ -9,10 +9,12 @@ import 'package:training_planner/widgets/agenda_week.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AgendaPage extends StatefulWidget {
+  final int agendaWeekNr;
+
   @override
   _AgendaPageState createState() => _AgendaPageState();
 
-  const AgendaPage({Key? key}) : super(key: key);
+  const AgendaPage({Key? key, required this.agendaWeekNr}) : super(key: key);
 }
 
 class _AgendaPageState extends State<AgendaPage> {
@@ -28,10 +30,12 @@ class _AgendaPageState extends State<AgendaPage> {
   initState() {
     super.initState();
 
+    weekToStartAt = widget.agendaWeekNr;
     weeks = getWeeks();
 
     currentSelectedPageIndex = weekToStartAt;
     currentSelectedPageNr = weekNrs[weekToStartAt];
+    currentSelectedWeek = dateTimes[weekToStartAt];
   }
 
   List<Widget> getWeeks() {
@@ -52,7 +56,7 @@ class _AgendaPageState extends State<AgendaPage> {
 
       bool isCurrentWeek = false;
       if (mondayOfWeek == firstDayOfCurrentWeek) {
-        weekToStartAt = i;
+        if (weekToStartAt == 0) weekToStartAt = i;
         isCurrentWeek = true;
       }
 
@@ -102,13 +106,7 @@ class _AgendaPageState extends State<AgendaPage> {
                       pageIndex: currentSelectedPageIndex,
                       mondayOfWeek: currentSelectedWeek,
                     )),
-          ).then((val) => {
-                setState(() {
-                  weeks = getWeeks();
-                  currentSelectedPageIndex = weekToStartAt;
-                  currentSelectedPageNr = weekNrs[weekToStartAt];
-                })
-              });
+          );
         },
         backgroundColor: Style.titleColor,
         child: const Icon(Icons.add),

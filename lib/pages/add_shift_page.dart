@@ -32,6 +32,9 @@ class _AddShiftPageState extends State<AddShiftPage> {
   void addShift() {
     DateTime startDate = widget.mondayOfWeek;
     switch (dropdownValue) {
+      case 'Maandag':
+        startDate = startDate.add(Duration(days: 0));
+        break;
       case 'Dinsdag':
         startDate = startDate.add(Duration(days: 1));
         break;
@@ -52,20 +55,34 @@ class _AddShiftPageState extends State<AddShiftPage> {
         break;
     }
 
-    shiftProvider.addShift(Shift(
-        start: startDate,
-        type: isSelected[0]
-            ? ShiftType.Dagrit
-            : isSelected[1]
-                ? ShiftType.Avondrit
-                : ShiftType.Terugscannen));
+    ShiftType type = ShiftType.Dagrit;
+    if (isSelected[1]) type = ShiftType.Avondrit;
+    if (isSelected[2]) type = ShiftType.Terugscannen;
+
+    switch (type) {
+      case ShiftType.Dagrit:
+        startDate = startDate.add(Duration(hours: 10));
+        break;
+      case ShiftType.Avondrit:
+        startDate = startDate.add(Duration(
+            hours: startDate.weekday == 6 ? 15 : 17,
+            minutes: startDate.weekday == 6 ? 30 : 0));
+        break;
+      case ShiftType.Terugscannen:
+        startDate = startDate.add(
+            Duration(hours: startDate.weekday == 6 ? 13 : 14, minutes: 30));
+        break;
+    }
+
+    shiftProvider.addShift(Shift(start: startDate, type: type));
 
     Navigator.pop(context, true);
 
     // Previous page will not refresh without this.
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => HomePage()),
+      MaterialPageRoute(
+          builder: (context) => HomePage(agendaWeekNr: widget.pageIndex)),
       (Route<dynamic> route) => false,
     );
   }

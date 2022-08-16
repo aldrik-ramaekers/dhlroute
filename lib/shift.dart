@@ -16,10 +16,23 @@ class Shift {
 
   Shift({this.end = null, required this.start, required this.type});
 
+  Shift.fromJson(Map<String, dynamic> json)
+      : start = DateTime.parse(json['start']),
+        end = json['end'] == null ? null : DateTime.tryParse(json['end']),
+        type = ShiftType.values.firstWhere((e) => e.toString() == json['type']),
+        isActive = json['isActive'] == 'true';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'start': start.toIso8601String(),
+      'end': end?.toIso8601String(),
+      'type': type.toString(),
+      'isActive': isActive.toString(),
+    };
+  }
+
   Widget getStatusIcon() {
-    if (end == null &&
-        start.isBefore(DateTime.now()) &&
-        !DateUtilities.DateUtils.isSameDay(start, DateTime.now())) {
+    if (shiftIsOpenButBeforeToday()) {
       return Icon(Icons.pending);
     }
     if (getIsActive() && end == null) {
@@ -88,6 +101,12 @@ class Shift {
     return 0.22916666;
   }
 
+  bool shiftIsOpenButBeforeToday() {
+    return end == null &&
+        start.isBefore(DateTime.now()) &&
+        !DateUtilities.DateUtils.isSameDay(start, DateTime.now());
+  }
+
   double getMoneyForActiveSession() {
     if (getIsActive()) {
       Duration elapsed = DateTime.now().difference(start);
@@ -120,9 +139,7 @@ class Shift {
   }
 
   Color getStatusColor() {
-    if (end == null &&
-        start.isBefore(DateTime.now()) &&
-        !DateUtilities.DateUtils.isSameDay(start, DateTime.now())) {
+    if (shiftIsOpenButBeforeToday()) {
       return Colors.orange;
     }
     if (getIsActive() && end == null) {

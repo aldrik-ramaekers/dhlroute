@@ -112,47 +112,113 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
     flutterLocalNotificationsPlugin.cancelAll();
   }
 
+  Widget createStartShiftButton() {
+    return TextButton(
+        onPressed: () => {
+              setState(() {
+                widget.shift.setIsActive(true);
+                shiftProvider.updateShift(widget.shift);
+                setStartAndEndTime();
+                showNotificationForActiveSession();
+              })
+            },
+        child: Text('Begin'));
+  }
+
+  Widget createStopShiftButton() {
+    return TextButton(
+        onPressed: () {
+          auth
+              .authenticate(
+                  localizedReason: 'Weet je zeker dat je wilt eindigen?')
+              .then((value) => {
+                    if (value)
+                      {
+                        setState(() {
+                          widget.shift.setIsActive(false);
+                          shiftProvider.updateShift(widget.shift);
+                          stopNotificationForActiveSession();
+                        })
+                      }
+                  })
+              .catchError((f) => {});
+        },
+        child: Text('Einde'));
+  }
+
+  Future requestStartAndEndTimeForShift() async {
+    final TimeOfDay? startTime = await showTimePicker(
+      context: context,
+      helpText: 'Begin tijd',
+      initialTime: TimeOfDay(
+          hour: widget.shift.start.hour, minute: widget.shift.start.minute),
+      initialEntryMode: TimePickerEntryMode.input,
+    );
+
+    if (startTime == null) {
+      return;
+    }
+
+    final TimeOfDay? endTime = await showTimePicker(
+      context: context,
+      helpText: 'Eind tijd',
+      initialTime: TimeOfDay(
+          hour: widget.shift.expectedEndTime().hour,
+          minute: widget.shift.expectedEndTime().minute),
+      initialEntryMode: TimePickerEntryMode.input,
+    );
+
+    if (endTime == null) {
+      return;
+    }
+
+    widget.shift.start = DateTime(
+        widget.shift.start.year,
+        widget.shift.start.month,
+        widget.shift.start.day,
+        startTime.hour,
+        startTime.minute);
+
+    widget.shift.end = DateTime(
+        widget.shift.start.year,
+        widget.shift.start.month,
+        widget.shift.start.day,
+        endTime.hour,
+        endTime.minute);
+
+    shiftProvider.updateShift(widget.shift);
+  }
+
+  Widget createCompleteOldShiftButton() {
+    return TextButton(
+        onPressed: () => {
+              requestStartAndEndTimeForShift().then((e) => {setState(() {})})
+            },
+        child: Text('Invullen'));
+  }
+
+  Widget createShiftModifyButton() {
+    if (!widget.shift.getIsActive() && widget.shift.canStart()) {
+      return createStartShiftButton();
+    } else if (widget.shift.getIsActive()) {
+      return createStopShiftButton();
+    } else if (widget.shift.shiftIsOpenButBeforeToday()) {
+      return createCompleteOldShiftButton();
+    }
+
+    return Padding(padding: const EdgeInsets.all(0));
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget startShiftWidget = Padding(padding: const EdgeInsets.all(0));
+    Widget startShiftWidget = createShiftModifyButton();
     TextStyle endDateTextStyle = TextStyle(color: Colors.black);
-
-    if (!widget.shift.getIsActive() && widget.shift.canStart()) {
-      startShiftWidget = TextButton(
-          onPressed: () => {
-                setState(() {
-                  showNotificationForActiveSession();
-                  widget.shift.setIsActive(true);
-                  shiftProvider.updateShift(widget.shift);
-                  setStartAndEndTime();
-                })
-              },
-          child: Text('Begin'));
-    } else if (widget.shift.getIsActive()) {
-      startShiftWidget = TextButton(
-          onPressed: () {
-            auth
-                .authenticate(
-                    localizedReason: 'Weet je zeker dat je wilt eindigen?')
-                .then((value) => {
-                      if (value)
-                        {
-                          setState(() {
-                            widget.shift.setIsActive(false);
-                            shiftProvider.updateShift(widget.shift);
-                            setStartAndEndTime();
-                            stopNotificationForActiveSession();
-                          })
-                        }
-                    })
-                .catchError((f) => {});
-          },
-          child: Text('Einde'));
-    }
 
     if (!widget.shift.isDone()) {
       endDateTextStyle = TextStyle(color: Color.fromARGB(80, 0, 0, 0));
     }
+
+    setStartAndEndTime();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),

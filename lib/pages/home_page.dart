@@ -6,27 +6,31 @@ import 'package:training_planner/main.dart';
 import 'package:training_planner/style/style.dart';
 
 class HomePage extends StatefulWidget {
+  int agendaWeekNr;
   @override
   _HomePageState createState() => _HomePageState();
 
-  const HomePage({Key? key}) : super(key: key);
+  HomePage({Key? key, required this.agendaWeekNr}) : super(key: key);
 }
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  static final List<Widget> _widgetOptions = <Widget>[
-    new AgendaPage(),
-    new LogbookPage(),
-  ];
+  List<Widget> _widgetOptions = [];
 
   @override
   initState() {
+    _widgetOptions = <Widget>[
+      new AgendaPage(agendaWeekNr: widget.agendaWeekNr),
+      new LogbookPage(),
+    ];
+
     super.initState();
   }
 
   void _onItemTapped(int index) {
     setState(() {
+      widget.agendaWeekNr = 0;
       _selectedIndex = index;
     });
   }

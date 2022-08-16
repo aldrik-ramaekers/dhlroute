@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
+import 'package:training_planner/main.dart';
 import 'package:training_planner/pages/add_shift_page.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
@@ -19,7 +20,6 @@ class AgendaPage extends StatefulWidget {
 
 class _AgendaPageState extends State<AgendaPage> {
   int weekToStartAt = 0;
-  List<Widget> weeks = [];
   List<int> weekNrs = [];
   List<DateTime> dateTimes = [];
   int currentSelectedPageIndex = 0;
@@ -31,15 +31,14 @@ class _AgendaPageState extends State<AgendaPage> {
     super.initState();
 
     weekToStartAt = widget.agendaWeekNr;
-    weeks = getWeeks();
-
+    getWeeks();
     currentSelectedPageIndex = weekToStartAt;
     currentSelectedPageNr = weekNrs[weekToStartAt];
     currentSelectedWeek = dateTimes[weekToStartAt];
   }
 
-  List<Widget> getWeeks() {
-    List<Widget> result = [];
+  List<AgendaWeek> getWeeks() {
+    List<AgendaWeek> result = [];
     List<int> weekNrs = [];
     DateTime startDate =
         DateUtilities.DateUtils.firstDayOfWeek(DateTime(2020, 1, 1));
@@ -77,6 +76,8 @@ class _AgendaPageState extends State<AgendaPage> {
 
   @override
   Widget build(BuildContext context) {
+    List<AgendaWeek> weeks = getWeeks();
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(0),
@@ -93,7 +94,7 @@ class _AgendaPageState extends State<AgendaPage> {
             enableInfiniteScroll: false,
             initialPage: weekToStartAt, // Week nr
           ),
-          items: getWeeks(),
+          items: weeks,
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -102,10 +103,10 @@ class _AgendaPageState extends State<AgendaPage> {
             context,
             MaterialPageRoute(
                 builder: (context) => AddShiftPage(
-                      pageNr: currentSelectedPageNr,
-                      pageIndex: currentSelectedPageIndex,
-                      mondayOfWeek: currentSelectedWeek,
-                    )),
+                    pageNr: currentSelectedPageNr,
+                    pageIndex: currentSelectedPageIndex,
+                    mondayOfWeek: currentSelectedWeek,
+                    updateParent: weeks[currentSelectedPageIndex].updateFunc!)),
           );
         },
         backgroundColor: Style.titleColor,

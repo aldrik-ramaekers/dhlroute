@@ -10,9 +10,12 @@ import '../style/style.dart';
 
 class AgendaWeekItem extends StatefulWidget {
   final Shift shift;
+  final Function updateParent;
+
   const AgendaWeekItem({
     Key? key,
     required this.shift,
+    required this.updateParent,
   }) : super(key: key);
 
   @override
@@ -186,7 +189,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
         endTime.hour,
         endTime.minute);
 
-    shiftProvider.updateShift(widget.shift);
+    await shiftProvider.updateShift(widget.shift);
   }
 
   Widget createCompleteOldShiftButton() {
@@ -207,6 +210,41 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
     }
 
     return Padding(padding: const EdgeInsets.all(0));
+  }
+
+  void showDeleteShiftModal() {
+    // set up the buttons
+    Widget cancelButton = FlatButton(
+      child: Text("Terug"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    Widget continueButton = FlatButton(
+      child: Text("Verwijder"),
+      onPressed: () async {
+        await shiftProvider.deleteShift(widget.shift);
+        Navigator.pop(context);
+        widget.updateParent();
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Verwijderen"),
+      content: Text("Werktijd verwijderen uit schema?"),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
   @override
@@ -240,15 +278,20 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                   padding: EdgeInsets.only(right: 5),
                   child: Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                            color: widget.shift.getStatusColor(),
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(8),
-                                bottomLeft: Radius.circular(8))),
-                        height: 48.0,
-                        width: 32.0,
-                        child: widget.shift.getStatusIcon(),
+                      GestureDetector(
+                        onLongPress: () {
+                          showDeleteShiftModal();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: widget.shift.getStatusColor(),
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  bottomLeft: Radius.circular(8))),
+                          height: 48.0,
+                          width: 32.0,
+                          child: widget.shift.getStatusIcon(),
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.only(left: 10),

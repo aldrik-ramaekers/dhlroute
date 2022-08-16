@@ -9,6 +9,8 @@ class AddShiftPage extends StatefulWidget {
   final int pageNr;
   final int pageIndex;
   final DateTime mondayOfWeek;
+  final Function updateParent;
+
   @override
   _AddShiftPageState createState() => _AddShiftPageState();
 
@@ -17,6 +19,7 @@ class AddShiftPage extends StatefulWidget {
     required this.pageNr,
     required this.pageIndex,
     required this.mondayOfWeek,
+    required this.updateParent,
   }) : super(key: key);
 }
 
@@ -29,7 +32,7 @@ class _AddShiftPageState extends State<AddShiftPage> {
   String dropdownValue = 'Maandag';
   List<bool> isSelected = [false, true, false];
 
-  void addShift() {
+  Future<void> addShift() async {
     DateTime startDate = widget.mondayOfWeek;
     switch (dropdownValue) {
       case 'Maandag':
@@ -74,17 +77,9 @@ class _AddShiftPageState extends State<AddShiftPage> {
         break;
     }
 
-    shiftProvider.addShift(Shift(start: startDate, type: type));
-
-    Navigator.pop(context, true);
-
-    // Previous page will not refresh without this.
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-          builder: (context) => HomePage(agendaWeekNr: widget.pageIndex)),
-      (Route<dynamic> route) => false,
-    );
+    await shiftProvider.addShift(Shift(start: startDate, type: type));
+    widget.updateParent();
+    Navigator.pop(context);
   }
 
   @override
@@ -152,7 +147,9 @@ class _AddShiftPageState extends State<AddShiftPage> {
             Padding(
               padding: const EdgeInsets.all(20),
             ),
-            TextButton(onPressed: () => {addShift()}, child: Text('Toevoegen')),
+            TextButton(
+                onPressed: () async => {await addShift()},
+                child: Text('Toevoegen')),
           ],
         )));
   }

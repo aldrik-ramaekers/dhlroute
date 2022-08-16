@@ -10,11 +10,12 @@ class AgendaWeek extends StatefulWidget {
   final int weekNr;
   final DateTime mondayOfWeek;
   final bool isCurrentWeek;
+  Function? updateFunc;
 
   @override
   _AgendaWeekState createState() => _AgendaWeekState();
 
-  const AgendaWeek({
+  AgendaWeek({
     Key? key,
     required this.weekNr,
     required this.mondayOfWeek,
@@ -25,31 +26,40 @@ class AgendaWeek extends StatefulWidget {
 class _AgendaWeekState extends State<AgendaWeek> {
   List<Widget> weekItems = [];
 
+  void updateItems() {
+    setState(() {
+      shiftProvider
+          .getShiftsForWeek(this.widget.mondayOfWeek)
+          .then((value) => setState(() {
+                weekItems = [
+                  AgendaWeekTitle(
+                      weekNr: this.widget.weekNr,
+                      mondayOfWeek: this.widget.mondayOfWeek,
+                      isCurrentWeek: this.widget.isCurrentWeek),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                  )
+                ];
+
+                for (var item in value) {
+                  weekItems.add(new AgendaWeekItem(
+                    shift: item,
+                    updateParent: updateItems,
+                  ));
+                }
+
+                weekItems.add(Padding(
+                  padding: const EdgeInsets.all(50),
+                ));
+              }));
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-
-    shiftProvider
-        .getShiftsForWeek(this.widget.mondayOfWeek)
-        .then((value) => setState(() {
-              weekItems = [
-                AgendaWeekTitle(
-                    weekNr: this.widget.weekNr,
-                    mondayOfWeek: this.widget.mondayOfWeek,
-                    isCurrentWeek: this.widget.isCurrentWeek),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                )
-              ];
-
-              for (var item in value) {
-                weekItems.add(new AgendaWeekItem(shift: item));
-              }
-
-              weekItems.add(Padding(
-                padding: const EdgeInsets.all(50),
-              ));
-            }));
+    updateItems();
+    widget.updateFunc = updateItems;
   }
 
   @override

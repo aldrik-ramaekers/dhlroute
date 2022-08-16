@@ -87,4 +87,9 @@ class MockShiftProviderService extends IProgramProviderService {
 
     return result;
   }
+
+  @override
+  Future<void> deleteShift(Shift shift) async {
+    savedShifts.remove(shift);
+  }
 }

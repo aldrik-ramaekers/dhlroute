@@ -101,4 +101,16 @@ class ShiftProviderService extends IProgramProviderService {
 
     return result;
   }
+
+  @override
+  Future<void> deleteShift(Shift shift) async {
+    List<Shift> savedShifts = await readShiftsFromFile();
+    for (var item in savedShifts) {
+      if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
+        savedShifts.remove(item);
+        break;
+      }
+    }
+    await writeShiftsFromFile(savedShifts);
+  }
 }

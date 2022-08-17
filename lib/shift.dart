@@ -45,7 +45,7 @@ class Shift {
       case ShiftStatus.Active:
         return Padding(
           child: CircularProgressIndicator(
-            strokeWidth: 1,
+            strokeWidth: 2,
             color: Colors.white,
           ),
           padding:
@@ -109,6 +109,18 @@ class Shift {
     return end == null &&
         start.isBefore(DateTime.now()) &&
         !DateUtilities.DateUtils.isSameDay(start, DateTime.now());
+  }
+
+  double getEarnedMoney() {
+    DateTime? endToCalculate = end;
+    endToCalculate ??= expectedEndTime();
+
+    if (start.weekday == 6) {
+      return endToCalculate.difference(start).inMinutes *
+          getMinutePayRate() *
+          1.35;
+    }
+    return endToCalculate.difference(start).inMinutes * getMinutePayRate();
   }
 
   double getMoneyForActiveSession() {

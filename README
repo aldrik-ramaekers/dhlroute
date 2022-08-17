@@ -2,6 +2,8 @@
 - Laat geld zien op gesloten shifts
 - gebruiker uurloon laten aanpassen
 - gebruiker begintijd laten aanpassen per shift
+- versie toevoegen aan locale bestanden
+- foutmelding geven wanneer een dubbele shift wordt toegevoegd
 
 # Features
 - Aanmelden van werktijden
@@ -11,3 +13,4 @@
 - data wordt lokaal opgeslagen
 - gemakkelijk meerdere shifts tegelijk aanmelden
 - schatting over aantal ingeplande uren en inkomen
+- responsive on all screens

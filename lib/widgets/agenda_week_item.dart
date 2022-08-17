@@ -200,6 +200,12 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
         child: Text('Invullen'));
   }
 
+  Widget createOldShiftInfoText() {
+    return Text(
+      '€' + widget.shift.getEarnedMoney().toStringAsFixed(2),
+    );
+  }
+
   Widget createShiftModifyButton() {
     if (!widget.shift.getIsActive() && widget.shift.canStart()) {
       return createStartShiftButton();
@@ -207,6 +213,8 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
       return createStopShiftButton();
     } else if (widget.shift.shiftIsOpenButBeforeToday()) {
       return createCompleteOldShiftButton();
+    } else if (widget.shift.isDone()) {
+      return createOldShiftInfoText();
     }
 
     return Padding(padding: const EdgeInsets.all(0));
@@ -258,6 +266,21 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
 
     setStartAndEndTime();
 
+    double widthOfItem = MediaQuery.of(context).size.width - 20;
+    double heightOfItem = 48;
+    double widthOfIcon = 32;
+    double widthOfWeekday = 35;
+    double widthOfDates = 95;
+    double widthOfAction = 90;
+
+    double remaining = widthOfItem -
+        widthOfIcon -
+        widthOfWeekday -
+        widthOfDates -
+        widthOfAction -
+        20; // padding
+    double widthOfShiftType = remaining;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
       child: Container(
@@ -270,7 +293,8 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: double.infinity,
+                width: widthOfItem,
+                height: heightOfItem,
                 decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(4))),
                 padding: EdgeInsets.all(0),
@@ -288,8 +312,8 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                               borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(8),
                                   bottomLeft: Radius.circular(8))),
-                          height: 48.0,
-                          width: 32.0,
+                          height: heightOfItem,
+                          width: widthOfIcon,
                           child: widget.shift.getStatusIcon(),
                         ),
                       ),
@@ -299,7 +323,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                           DateHelper.getWeekdayName(widget.shift.start.weekday),
                           style: Style.listItemTitletextBold,
                         ),
-                        width: 35,
+                        width: widthOfWeekday,
                       ),
                       Container(
                         child: RichText(
@@ -312,15 +336,21 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                             ],
                           ),
                         ),
-                        width: 95,
+                        width: widthOfDates,
                       ),
                       Container(
                         child: Text(
                           '| ' + shiftTypeName,
                         ),
-                        width: 100,
+                        width: widthOfShiftType,
                       ),
-                      startShiftWidget,
+                      Container(
+                        child: Align(
+                          child: startShiftWidget,
+                          alignment: Alignment.centerRight,
+                        ),
+                        width: widthOfAction,
+                      ),
                     ],
                   ),
                 ),

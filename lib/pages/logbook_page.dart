@@ -23,11 +23,10 @@ class MonthData {
 
   void calculateData() {
     totalWorkedTime = Duration();
+    expectedSalary = 0;
     for (var shift in shifts) {
       totalWorkedTime += shift.getElapsedSessionTime();
-    }
-    if (shifts.isNotEmpty) {
-      expectedSalary = totalWorkedTime.inMinutes * shifts[0].getMinutePayRate();
+      expectedSalary += shift.getEarnedMoney();
     }
   }
 

@@ -8,9 +8,7 @@ import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:path_provider/path_provider.dart';
 
 class LocalShiftProviderService extends IProgramProviderService {
-  LocalShiftProviderService() {
-    writeShiftsFromFile([]);
-  }
+  LocalShiftProviderService() {}
 
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -19,6 +17,15 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   Future<File> get _localFile async {
     final path = await _localPath;
+    File file = File('$path/shifts.json');
+
+    bool exists = await file.exists();
+    if (!exists) {
+      print('created shifts.json');
+      await file.create();
+      await writeShiftsFromFile([]);
+    }
+
     return File('$path/shifts.json');
   }
 
@@ -67,16 +74,17 @@ class LocalShiftProviderService extends IProgramProviderService {
   }
 
   @override
-  Future<void> addShift(Shift shift) async {
+  Future<bool> addShift(Shift shift) async {
     List<Shift> savedShifts = await readShiftsFromFile();
     for (var item in savedShifts) {
       if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
-        return;
+        return false;
       }
     }
 
     savedShifts.add(shift);
     await writeShiftsFromFile(savedShifts);
+    return true;
   }
 
   @override

@@ -120,6 +120,11 @@ class Shift {
           getMinutePayRate() *
           1.35;
     }
+    if (start.weekday == 7) {
+      return endToCalculate.difference(start).inMinutes *
+          getMinutePayRate() *
+          2;
+    }
     return endToCalculate.difference(start).inMinutes * getMinutePayRate();
   }
 

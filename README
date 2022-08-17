@@ -1,16 +1,19 @@
+# Aanpassingen
+- exceptions afhandelen binnen localShiftProvider en doorgeven aan ui
+
 # Nog te doen
-- Laat geld zien op gesloten shifts
-- gebruiker uurloon laten aanpassen
-- gebruiker begintijd laten aanpassen per shift
+- gebruiker standaard uurloon laten aanpassen
+- gebruiker standaard begintijd laten aanpassen per shift
 - versie toevoegen aan locale bestanden
-- foutmelding geven wanneer een dubbele shift wordt toegevoegd
 
 # Features
 - Aanmelden van werktijden
-- Begin en eindtijd invullen per shift
+- Begin en eindtijd invullen/aanpassen per shift
 - Begin en eindtijd live bijhouden
 - Maandelijks overzicht van gewerkte uren en inkomen
 - data wordt lokaal opgeslagen
 - gemakkelijk meerdere shifts tegelijk aanmelden
 - schatting over aantal ingeplande uren en inkomen
-- responsive on all screens
+- werkt on alle soorten schermen
+- Laat salaris zien per shift
+- duidelijke berichtgeving en foutmeldingen

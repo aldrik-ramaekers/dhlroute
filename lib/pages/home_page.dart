@@ -31,6 +31,10 @@ class _HomePageState extends State<HomePage> {
   void _onItemTapped(int index) {
     setState(() {
       widget.agendaWeekNr = 0;
+      _widgetOptions = <Widget>[
+        new AgendaPage(agendaWeekNr: widget.agendaWeekNr),
+        new LogbookPage(),
+      ];
       _selectedIndex = index;
     });
   }

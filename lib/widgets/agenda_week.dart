@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
@@ -24,6 +27,7 @@ class AgendaWeek extends StatefulWidget {
 
 class _AgendaWeekState extends State<AgendaWeek> {
   List<Widget> weekItems = [];
+  StreamSubscription? eventbusSubscription;
 
   void updateItems() {
     setState(() {
@@ -58,6 +62,16 @@ class _AgendaWeekState extends State<AgendaWeek> {
   void initState() {
     super.initState();
     updateItems();
+
+    eventbusSubscription = eventBus.on<RefreshWeekEvent>().listen((event) {
+      updateItems();
+    });
+  }
+
+  @override
+  void dispose() {
+    eventbusSubscription?.cancel();
+    super.dispose();
   }
 
   @override

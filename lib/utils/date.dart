@@ -1,4 +1,24 @@
 class DateHelper {
+  static String getWeekdayNameFull(int nr) {
+    switch (nr) {
+      case DateTime.monday:
+        return 'Maandag';
+      case DateTime.tuesday:
+        return 'Dinsdag';
+      case DateTime.wednesday:
+        return 'Woensdag';
+      case DateTime.thursday:
+        return 'Donderdag';
+      case DateTime.friday:
+        return 'Vrijdag';
+      case DateTime.saturday:
+        return 'Zaterdag';
+      case DateTime.sunday:
+        return 'Zondag';
+    }
+    return '';
+  }
+
   static String getWeekdayName(int nr) {
     switch (nr) {
       case DateTime.monday:

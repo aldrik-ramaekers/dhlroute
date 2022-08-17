@@ -106,14 +106,9 @@ class _LogbookPageState extends State<LogbookPage> {
                 Text('Gewerkt: ' +
                     month.totalWorkedTime.inHours.toString() +
                     ' uur'),
-                Text('Verdiend: ' +
+                Text('Verdiend: €' +
                     month.expectedSalary.toStringAsFixed(2) +
-                    (month.shifts.isNotEmpty
-                        ? ' (' +
-                            (month.shifts[0].getMinutePayRate() * 60)
-                                .toStringAsFixed(2) +
-                            '/uur)'
-                        : '')),
+                    ' (schatting)'),
                 Padding(padding: EdgeInsets.only(left: 5, bottom: 5, right: 5)),
               ],
             ),

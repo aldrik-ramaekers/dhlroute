@@ -1,10 +1,12 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
+import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/pages/home_page.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
+import 'package:training_planner/utils/date.dart';
 import 'package:training_planner/widgets/agenda_week.dart';
 
 class AgendaPage extends StatefulWidget {
@@ -76,7 +78,15 @@ class _AgendaPageState extends State<AgendaPage> {
           break;
       }
 
-      await shiftProvider.addShift(Shift(start: dayOfWeek, type: type));
+      bool success =
+          await shiftProvider.addShift(Shift(start: dayOfWeek, type: type));
+      if (!success) {
+        messageService.showMessage(
+            context,
+            '\'' +
+                DateHelper.getWeekdayNameFull(dayOfWeek.weekday) +
+                '\' is al ingepland');
+      }
     }
   }
 
@@ -98,7 +108,6 @@ class _AgendaPageState extends State<AgendaPage> {
       child: Text("Ok"),
       onPressed: () async {
         await addShiftsFromDialog();
-        setState(() {});
         Navigator.pop(context);
       },
     );
@@ -221,12 +230,7 @@ class _AgendaPageState extends State<AgendaPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await showAddShiftDialog();
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (BuildContext context) => HomePage(
-                        agendaWeekNr: currentSelectedPageIndex,
-                      )));
+          eventBus.fire(RefreshWeekEvent());
         },
         backgroundColor: Style.titleColor,
         child: const Icon(Icons.add),

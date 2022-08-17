@@ -56,13 +56,14 @@ class MockShiftProviderService extends IProgramProviderService {
   }
 
   @override
-  Future<void> addShift(Shift shift) async {
+  Future<bool> addShift(Shift shift) async {
     for (var item in savedShifts) {
       if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
-        return;
+        return false;
       }
     }
     savedShifts.add(shift);
+    return true;
   }
 
   @override

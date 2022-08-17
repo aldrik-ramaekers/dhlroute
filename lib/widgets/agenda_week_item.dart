@@ -150,6 +150,10 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   }
 
   Future requestStartAndEndTimeForShift() async {
+    bool alsoAskForEndTime =
+        widget.shift.getShiftStatus() == ShiftStatus.OldOpen ||
+            widget.shift.getShiftStatus() == ShiftStatus.Closed;
+
     final TimeOfDay? startTime = await showTimePicker(
       context: context,
       helpText: 'Begin tijd',
@@ -162,17 +166,26 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
       return;
     }
 
-    final TimeOfDay? endTime = await showTimePicker(
-      context: context,
-      helpText: 'Eind tijd',
-      initialTime: TimeOfDay(
-          hour: widget.shift.expectedEndTime().hour,
-          minute: widget.shift.expectedEndTime().minute),
-      initialEntryMode: TimePickerEntryMode.input,
-    );
+    if (alsoAskForEndTime) {
+      final TimeOfDay? endTime = await showTimePicker(
+        context: context,
+        helpText: 'Eind tijd',
+        initialTime: TimeOfDay(
+            hour: widget.shift.expectedEndTime().hour,
+            minute: widget.shift.expectedEndTime().minute),
+        initialEntryMode: TimePickerEntryMode.input,
+      );
 
-    if (endTime == null) {
-      return;
+      if (endTime == null) {
+        return;
+      }
+
+      widget.shift.end = DateTime(
+          widget.shift.start.year,
+          widget.shift.start.month,
+          widget.shift.start.day,
+          endTime.hour,
+          endTime.minute);
     }
 
     widget.shift.start = DateTime(
@@ -181,13 +194,6 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
         widget.shift.start.day,
         startTime.hour,
         startTime.minute);
-
-    widget.shift.end = DateTime(
-        widget.shift.start.year,
-        widget.shift.start.month,
-        widget.shift.start.day,
-        endTime.hour,
-        endTime.minute);
 
     await shiftProvider.updateShift(widget.shift);
   }
@@ -229,7 +235,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
       },
     );
     Widget continueButton = FlatButton(
-      child: Text("Verwijder"),
+      child: Text("Verwijderen"),
       onPressed: () async {
         await shiftProvider.deleteShift(widget.shift);
         Navigator.pop(context);
@@ -325,18 +331,24 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                         ),
                         width: widthOfWeekday,
                       ),
-                      Container(
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(color: Colors.black),
-                            children: [
-                              TextSpan(text: ' | ' + shiftTime),
-                              TextSpan(
-                                  text: shiftTimeEnd, style: endDateTextStyle)
-                            ],
+                      GestureDetector(
+                        onLongPress: () {
+                          requestStartAndEndTimeForShift()
+                              .then((e) => {setState(() {})});
+                        },
+                        child: Container(
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(color: Colors.black),
+                              children: [
+                                TextSpan(text: ' | ' + shiftTime),
+                                TextSpan(
+                                    text: shiftTimeEnd, style: endDateTextStyle)
+                              ],
+                            ),
                           ),
+                          width: widthOfDates,
                         ),
-                        width: widthOfDates,
                       ),
                       Container(
                         child: Text(

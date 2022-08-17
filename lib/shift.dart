@@ -8,6 +8,14 @@ enum ShiftType {
   Terugscannen,
 }
 
+enum ShiftStatus {
+  OldOpen,
+  Closed,
+  Open,
+  Active,
+  Invalid,
+}
+
 class Shift {
   DateTime start;
   DateTime? end;
@@ -32,30 +40,26 @@ class Shift {
   }
 
   Widget getStatusIcon() {
-    if (shiftIsOpenButBeforeToday()) {
-      return Icon(Icons.pending);
+    ShiftStatus status = getShiftStatus();
+    switch (status) {
+      case ShiftStatus.Active:
+        return Padding(
+          child: CircularProgressIndicator(
+            strokeWidth: 1,
+            color: Colors.white,
+          ),
+          padding:
+              const EdgeInsets.only(top: 18, left: 10, right: 10, bottom: 18),
+        );
+      case ShiftStatus.OldOpen:
+        return Icon(Icons.pending);
+      case ShiftStatus.Open:
+        return canStart() ? Icon(Icons.today) : Icon(Icons.cabin);
+      case ShiftStatus.Closed:
+        return Icon(Icons.check);
+      case ShiftStatus.Invalid:
+        return Icon(Icons.public_off_outlined);
     }
-    if (getIsActive() && end == null) {
-      return Padding(
-        child: CircularProgressIndicator(
-          strokeWidth: 1,
-          color: Colors.white,
-        ),
-        padding:
-            const EdgeInsets.only(top: 18, left: 10, right: 10, bottom: 18),
-      );
-    }
-    if (canStart()) {
-      return Icon(Icons.today);
-    }
-    if (!getIsActive() && end == null) {
-      return Icon(Icons.cabin);
-    }
-    if (end != null) {
-      return Icon(Icons.check);
-    }
-
-    return Icon(Icons.question_answer);
   }
 
   bool canStart() {
@@ -120,7 +124,8 @@ class Shift {
     if (getIsActive()) {
       Duration totalMinutes = expectedEndTime().difference(start);
       Duration elapsed = DateTime.now().difference(start);
-      int percentage = (elapsed.inMinutes ~/ totalMinutes.inMinutes);
+      int percentage =
+          ((elapsed.inMinutes / totalMinutes.inMinutes) * 100).toInt();
       if (percentage < 0) percentage = 0;
       if (percentage > 100) percentage = 100;
       return percentage;
@@ -130,7 +135,6 @@ class Shift {
 
   void setIsActive(bool active) {
     isActive = active;
-
     if (active) {
       start = DateTime.now();
     } else {
@@ -138,20 +142,36 @@ class Shift {
     }
   }
 
-  Color getStatusColor() {
+  ShiftStatus getShiftStatus() {
     if (shiftIsOpenButBeforeToday()) {
-      return Colors.orange;
+      return ShiftStatus.OldOpen;
     }
     if (getIsActive() && end == null) {
-      return Colors.grey;
+      return ShiftStatus.Active;
     }
     if (!getIsActive() && end == null) {
-      return Colors.red;
+      return ShiftStatus.Open;
     }
     if (end != null) {
-      return Colors.green;
+      return ShiftStatus.Closed;
     }
 
-    return Colors.pink;
+    return ShiftStatus.Invalid;
+  }
+
+  Color getStatusColor() {
+    ShiftStatus status = getShiftStatus();
+    switch (status) {
+      case ShiftStatus.Active:
+        return Colors.grey;
+      case ShiftStatus.OldOpen:
+        return Colors.orange;
+      case ShiftStatus.Open:
+        return Colors.red;
+      case ShiftStatus.Closed:
+        return Colors.green;
+      case ShiftStatus.Invalid:
+        return Colors.pink;
+    }
   }
 }

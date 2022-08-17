@@ -7,8 +7,8 @@ import 'package:uuid/uuid.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:path_provider/path_provider.dart';
 
-class ShiftProviderService extends IProgramProviderService {
-  ShiftProviderService() {
+class LocalShiftProviderService extends IProgramProviderService {
+  LocalShiftProviderService() {
     writeShiftsFromFile([]);
   }
 

@@ -10,7 +10,6 @@ class AgendaWeek extends StatefulWidget {
   final int weekNr;
   final DateTime mondayOfWeek;
   final bool isCurrentWeek;
-  Function? updateFunc;
 
   @override
   _AgendaWeekState createState() => _AgendaWeekState();
@@ -59,7 +58,6 @@ class _AgendaWeekState extends State<AgendaWeek> {
   void initState() {
     super.initState();
     updateItems();
-    widget.updateFunc = updateItems;
   }
 
   @override
@@ -96,11 +94,6 @@ class _AgendaWeekState extends State<AgendaWeek> {
               },
               childCount: weekItems.length,
             )),
-
-            // Rest day
-            //if (day == null)
-            //  createRestDayPage(list)
-
             SliverPadding(padding: EdgeInsets.only(top: 20)),
           ],
         ),

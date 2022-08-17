@@ -1,8 +1,8 @@
 import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
-import 'package:training_planner/services/mock_program_provider_service.dart';
-import 'package:training_planner/services/program_provider_service.dart';
+import 'package:training_planner/services/mock_shift_provider_service.dart';
+import 'package:training_planner/services/local_shift_provider_service.dart';
 import 'pages/home_page.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -10,7 +10,7 @@ void main() {
   runApp(const MyApp());
 }
 
-IProgramProviderService shiftProvider = ShiftProviderService();
+IProgramProviderService shiftProvider = LocalShiftProviderService();
 final LocalAuthentication auth = LocalAuthentication();
 
 EventBus eventBus = EventBus();

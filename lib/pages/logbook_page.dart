@@ -2,7 +2,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:training_planner/main.dart';
-import 'package:training_planner/pages/add_shift_page.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
 import 'package:training_planner/utils/date.dart';

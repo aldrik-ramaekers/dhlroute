@@ -1,0 +1,13 @@
+# Nog te doen
+- Laat geld zien op gesloten shifts
+- gebruiker uurloon laten aanpassen
+- gebruiker begintijd laten aanpassen per shift
+
+# Features
+- Aanmelden van werktijden
+- Begin en eindtijd invullen per shift
+- Begin en eindtijd live bijhouden
+- Maandelijks overzicht van gewerkte uren en inkomen
+- data wordt lokaal opgeslagen
+- gemakkelijk meerdere shifts tegelijk aanmelden
+- schatting over aantal ingeplande uren en inkomen

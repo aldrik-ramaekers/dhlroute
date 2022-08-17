@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:training_planner/pages/agenda_page.dart';
 import 'package:training_planner/pages/logbook_page.dart';
+import 'package:training_planner/pages/settings_page.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/style/style.dart';
@@ -39,9 +40,53 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Drawer createDrawer() {
+    return Drawer(
+      // Add a ListView to the drawer. This ensures the user can scroll
+      // through the options in the drawer if there isn't enough vertical
+      // space to fit everything.
+      child: ListView(
+        // Important: Remove any padding from the ListView.
+        padding: EdgeInsets.zero,
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).viewPadding.top + 60,
+            child: const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Style.background,
+              ),
+              child: Text('Mijn werkschema'),
+            ),
+          ),
+          ListTile(
+            title: const Text('Instellingen'),
+            onTap: () {
+              settingsService.readSettingsFromFile().then((value) => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SettingsPage(
+                                settings: value,
+                              )),
+                    )
+                  });
+            },
+          ),
+          ListTile(
+            title: const Text('Profiel'),
+            onTap: () {
+              // ...
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: createDrawer(),
       appBar: AppBar(
         title: const Text('Werkschema'),
         backgroundColor: Style.background,

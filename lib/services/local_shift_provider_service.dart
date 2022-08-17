@@ -34,7 +34,6 @@ class LocalShiftProviderService extends IProgramProviderService {
       final file = await _localFile;
       String content = jsonEncode(shifts);
       await file.writeAsString(content);
-      print('Writing to file: ' + content);
     } catch (e, stacktrace) {
       print(stacktrace);
       print(e);
@@ -48,7 +47,6 @@ class LocalShiftProviderService extends IProgramProviderService {
       final Iterable iterable = await jsonDecode(contents);
       List<Shift> data =
           List<Shift>.from(iterable.map((model) => Shift.fromJson(model)));
-      print('Read from file: ' + contents);
 
       return data;
     } catch (e, stacktrace) {

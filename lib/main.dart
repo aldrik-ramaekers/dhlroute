@@ -4,6 +4,7 @@ import 'package:training_planner/services/ishift_provider_service.dart';
 import 'package:training_planner/services/messaging_service.dart';
 import 'package:training_planner/services/mock_shift_provider_service.dart';
 import 'package:training_planner/services/local_shift_provider_service.dart';
+import 'package:training_planner/services/settings_service.dart';
 import 'pages/home_page.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -14,6 +15,7 @@ void main() {
 final IProgramProviderService shiftProvider = LocalShiftProviderService();
 final LocalAuthentication auth = LocalAuthentication();
 final MessagingService messageService = MessagingService();
+final SettingsService settingsService = SettingsService();
 
 EventBus eventBus = EventBus();
 

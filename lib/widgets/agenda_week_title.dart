@@ -28,7 +28,7 @@ class _AgendaWeekTitleState extends State<AgendaWeekTitle> {
           children: [
             this.widget.isCurrentWeek
                 ? Icon(Icons.today)
-                : Padding(padding: const EdgeInsets.all(0)),
+                : Padding(padding: const EdgeInsets.all(12)),
             Center(
               child: Text(
                   " Week #" +

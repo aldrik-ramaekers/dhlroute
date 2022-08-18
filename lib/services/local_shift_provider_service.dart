@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:intl/intl.dart';
+import 'package:training_planner/config/defaults.dart';
+import 'package:training_planner/config/old_data.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
 import 'package:training_planner/shift.dart';
 import 'package:uuid/uuid.dart';
@@ -8,7 +10,36 @@ import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:path_provider/path_provider.dart';
 
 class LocalShiftProviderService extends IProgramProviderService {
-  LocalShiftProviderService() {}
+  Future<void> loadOldData() async {
+    int count = old_data_dates.length;
+
+    for (int i = 0; i < count; i++) {
+      var dateTmp = DateFormat('dd/MM/yyyy').parse(old_data_dates[i]);
+      var outputFormat = DateFormat('yyyy-MM-dd');
+
+      String date = outputFormat.format(dateTmp);
+      String start = old_start_times[i].trim();
+      String end = old_end_times[i].trim();
+
+      ShiftType type = DefaultConfig.shiftTypes[0];
+
+      DateTime startDate = DateTime.parse(date + ' ' + start);
+      DateTime endDate = DateTime.parse(date + ' ' + end);
+
+      if (startDate.hour > 15) type = DefaultConfig.shiftTypes[1];
+      if (startDate.hour > 12 && startDate.hour < 15)
+        type = DefaultConfig.shiftTypes[2];
+
+      print(startDate.toString() + ' -> ' + endDate.toString());
+      await addShift(Shift(
+          start: startDate, type: type.name, end: endDate, payRate: 13.75));
+    }
+  }
+
+  LocalShiftProviderService() {
+    getPastShifts()
+        .then((value) async => {if (value.isEmpty) await loadOldData()});
+  }
 
   Future<Directory> get _localDir async {
     final directory = await getApplicationDocumentsDirectory();

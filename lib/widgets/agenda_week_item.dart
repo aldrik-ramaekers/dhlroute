@@ -264,7 +264,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
     double widthOfItem = MediaQuery.of(context).size.width - 20;
     double heightOfItem = 48;
     double widthOfIcon = 32;
-    double widthOfWeekday = 35;
+    double widthOfWeekday = 45;
     double widthOfDates = 95;
     double widthOfAction = 90;
 
@@ -326,6 +326,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                         child: Text(
                           DateHelper.getWeekdayName(widget.shift.start.weekday),
                           style: Style.listItemTitletextBold,
+                          textAlign: TextAlign.center,
                         ),
                         width: widthOfWeekday,
                       ),

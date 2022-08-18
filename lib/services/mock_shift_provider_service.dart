@@ -13,41 +13,37 @@ class MockShiftProviderService extends IProgramProviderService {
       Shift(
           end: DateTime(2022, 8, 8, 20, 30),
           start: DateTime(2022, 8, 8, 16, 30),
-          type: ShiftType.Avondrit,
+          type: 'Avondrit',
           payRate: 13.75),
     );
 
     shifts.add(Shift(
         end: DateTime(2022, 8, 6, 20, 30),
         start: DateTime(2022, 8, 6, 16, 30),
-        type: ShiftType.Avondrit,
+        type: 'Avondrit',
         payRate: 13.75));
 
     shifts.add(Shift(
         end: DateTime(2022, 8, 5, 20, 30),
         start: DateTime(2022, 8, 5, 16, 30),
-        type: ShiftType.Avondrit,
+        type: 'Avondrit',
         payRate: 13.75));
 
     shifts.add(Shift(
-        start: DateTime(2022, 8, 4, 16, 30),
-        type: ShiftType.Avondrit,
-        payRate: 13.75));
+        start: DateTime(2022, 8, 4, 16, 30), type: 'Avondrit', payRate: 13.75));
 
     shifts.add(Shift(
         end: DateTime(2022, 8, 1, 17, 30),
         start: DateTime(2022, 8, 1, 9, 30),
-        type: ShiftType.Dagrit,
+        type: 'Dagrit',
         payRate: 13.75));
 
     shifts.add(Shift(
-        start: DateTime(2022, 8, 22, 9, 30),
-        type: ShiftType.Dagrit,
-        payRate: 13.75));
+        start: DateTime(2022, 8, 22, 9, 30), type: 'Dagrit', payRate: 13.75));
 
     shifts.add(Shift(
         start: DateTime.now().subtract(Duration(hours: 2)),
-        type: ShiftType.Dagrit,
+        type: 'Dagrit',
         payRate: 13.75));
 
     savedShifts = shifts;

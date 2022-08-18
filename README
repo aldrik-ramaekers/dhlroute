@@ -1,8 +1,11 @@
 # Aanpassingen
 - exceptions afhandelen binnen localShiftProvider en doorgeven aan ui
+- optie om bepaalde features aan en uit te zetten on config/config.dart
+- verplaats style naar config/style.dart
+- verplaats hardcoded kleuren naar style.dart
 
 # Nog te doen
-- uurloon van gebruiker gebruiken in berekeningen
+- Laat gebruiker shift types aanpassen in instellingen pagina
 
 # Features
 - Aanmelden van werktijden

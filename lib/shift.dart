@@ -1,12 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
-
-enum ShiftType {
-  Dagrit,
-  Avondrit,
-  Terugscannen,
-}
+import 'package:training_planner/config/defaults.dart';
 
 enum ShiftStatus {
   OldOpen,
@@ -19,7 +14,7 @@ enum ShiftStatus {
 class Shift {
   DateTime start;
   DateTime? end;
-  ShiftType type;
+  String type;
   double payRate;
   bool isActive = false;
 
@@ -32,7 +27,7 @@ class Shift {
   Shift.fromJson(Map<String, dynamic> json)
       : start = DateTime.parse(json['start']),
         end = json['end'] == null ? null : DateTime.tryParse(json['end']),
-        type = ShiftType.values.firstWhere((e) => e.toString() == json['type']),
+        type = json['type'],
         isActive = json['isActive'] == 'true',
         payRate = double.parse(json['payRate']);
 
@@ -40,7 +35,7 @@ class Shift {
     return {
       'start': start.toIso8601String(),
       'end': end?.toIso8601String(),
-      'type': type.toString(),
+      'type': type,
       'isActive': isActive.toString(),
       'payRate': payRate.toStringAsFixed(2),
     };
@@ -87,14 +82,7 @@ class Shift {
   }
 
   DateTime expectedEndTime() {
-    switch (type) {
-      case ShiftType.Avondrit:
-        return start.add(Duration(hours: 5));
-      case ShiftType.Dagrit:
-        return start.add(Duration(hours: 8));
-      case ShiftType.Terugscannen:
-        return start.add(Duration(hours: 8));
-    }
+    return start.add(DefaultConfig.getShiftByName(type).expectedDuration);
   }
 
   Duration getElapsedSessionTime() {

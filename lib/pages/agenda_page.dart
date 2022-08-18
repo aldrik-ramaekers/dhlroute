@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
+import 'package:training_planner/config/defaults.dart';
 import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/pages/home_page.dart';
@@ -59,29 +60,14 @@ class _AgendaPageState extends State<AgendaPage> {
           break;
       }
 
-      ShiftType type = ShiftType.Dagrit;
-      if (shiftsSelected[1]) type = ShiftType.Avondrit;
-      if (shiftsSelected[2]) type = ShiftType.Terugscannen;
-
-      switch (type) {
-        case ShiftType.Dagrit:
-          dayOfWeek = dayOfWeek.add(Duration(hours: 10));
-          break;
-        case ShiftType.Avondrit:
-          dayOfWeek = dayOfWeek.add(Duration(
-              hours: dayOfWeek.weekday == 6 ? 15 : 17,
-              minutes: dayOfWeek.weekday == 6 ? 30 : 0));
-          break;
-        case ShiftType.Terugscannen:
-          dayOfWeek = dayOfWeek.add(
-              Duration(hours: dayOfWeek.weekday == 6 ? 13 : 14, minutes: 30));
-          break;
-      }
+      ShiftType type = DefaultConfig.shiftTypes[currentSelectedShiftIndex];
+      dayOfWeek = dayOfWeek.add(
+          dayOfWeek.weekday != 6 ? type.startTime : type.startTimeSaturday);
 
       Settings settings = await settingsService.readSettingsFromFile();
 
       bool success = await shiftProvider.addShift(
-          Shift(start: dayOfWeek, type: type, payRate: settings.salary));
+          Shift(start: dayOfWeek, type: type.name, payRate: settings.salary));
       if (!success) {
         messageService.showMessage(
             context,
@@ -93,11 +79,14 @@ class _AgendaPageState extends State<AgendaPage> {
   }
 
   List<bool> dayIsSelected = [false, false, false, false, false, false, false];
-  List<bool> shiftsSelected = [false, true, false];
+  List<bool> shiftsSelected =
+      DefaultConfig.shiftTypes.map((e) => false).toList();
+  int currentSelectedShiftIndex = 0;
 
   Future<void> showAddShiftDialog() async {
     dayIsSelected = [false, false, false, false, false, false, false];
-    shiftsSelected = [false, true, false];
+    shiftsSelected = DefaultConfig.shiftTypes.map((e) => false).toList();
+    currentSelectedShiftIndex = 1;
 
     // set up the buttons
     Widget cancelButton = FlatButton(
@@ -131,15 +120,10 @@ class _AgendaPageState extends State<AgendaPage> {
               !splitDays
                   ? (ToggleButtons(
                       direction: Axis.vertical,
-                      children: <Widget>[
-                        Text('Ma'),
-                        Text('Di'),
-                        Text('Wo'),
-                        Text('Do'),
-                        Text('Vr'),
-                        Text('Za'),
-                        Text('Zo'),
-                      ],
+                      children: [1, 2, 3, 4, 5, 6, 7]
+                          .map((weekdayIndex) =>
+                              Text(DateHelper.getWeekdayName(weekdayIndex)))
+                          .toList(),
                       onPressed: (int index) {
                         setState(() {
                           dayIsSelected[index] = !dayIsSelected[index];
@@ -149,12 +133,10 @@ class _AgendaPageState extends State<AgendaPage> {
                     ))
                   : (ToggleButtons(
                       direction: Axis.vertical,
-                      children: <Widget>[
-                        Text('Ma'),
-                        Text('Di'),
-                        Text('Wo'),
-                        Text('Do'),
-                      ],
+                      children: [1, 2, 3, 4]
+                          .map((weekdayIndex) =>
+                              Text(DateHelper.getWeekdayName(weekdayIndex)))
+                          .toList(),
                       onPressed: (int index) {
                         setState(() {
                           dayIsSelected[index] = !dayIsSelected[index];
@@ -165,11 +147,10 @@ class _AgendaPageState extends State<AgendaPage> {
               splitDays
                   ? (ToggleButtons(
                       direction: Axis.vertical,
-                      children: <Widget>[
-                        Text('Vr'),
-                        Text('Za'),
-                        Text('Zo'),
-                      ],
+                      children: [5, 6, 7]
+                          .map((weekdayIndex) =>
+                              Text(DateHelper.getWeekdayName(weekdayIndex)))
+                          .toList(),
                       onPressed: (int index) {
                         setState(() {
                           dayIsSelected[index + 4] = !dayIsSelected[index + 4];
@@ -181,19 +162,17 @@ class _AgendaPageState extends State<AgendaPage> {
               ToggleButtons(
                 direction: Axis.vertical,
                 children: <Widget>[
-                  Padding(
-                      padding: const EdgeInsets.all(0), child: Text('Dagrit')),
-                  Padding(
-                      padding: const EdgeInsets.all(0),
-                      child: Text('Avondrit')),
-                  Padding(
-                      padding: const EdgeInsets.all(0),
-                      child: Text('Terugscan')),
+                  for (int i = 0; i < DefaultConfig.shiftTypes.length; i++)
+                    Padding(
+                        padding: const EdgeInsets.all(0),
+                        child: Text(DefaultConfig.shiftTypes[i].name)),
                 ],
                 onPressed: (int index) {
                   setState(() {
-                    shiftsSelected = [false, false, false];
+                    shiftsSelected =
+                        DefaultConfig.shiftTypes.map((e) => false).toList();
                     shiftsSelected[index] = true;
+                    currentSelectedShiftIndex = index;
                   });
                 },
                 isSelected: shiftsSelected,

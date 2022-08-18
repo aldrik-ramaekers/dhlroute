@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:training_planner/pages/agenda_page.dart';
+import 'package:training_planner/pages/developer_page.dart';
 import 'package:training_planner/pages/logbook_page.dart';
 import 'package:training_planner/pages/settings_page.dart';
 import 'package:training_planner/shift.dart';
@@ -73,9 +74,12 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           ListTile(
-            title: const Text('Profiel'),
+            title: const Text('Ontwikkelaar'),
             onTap: () {
-              // ...
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DeveloperPage()),
+              );
             },
           ),
         ],

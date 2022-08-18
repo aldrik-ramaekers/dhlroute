@@ -124,6 +124,12 @@ class _LogbookPageState extends State<LogbookPage> {
 
   Widget getDataList() {
     var monthDataWidgets = createMonthDataWidgets();
+    if (monthDataWidgets.isEmpty) {
+      return Center(
+        child: Text('Geen data beschikbaar'),
+      );
+    }
+
     return SafeArea(
       child: CustomScrollView(
         physics: null,

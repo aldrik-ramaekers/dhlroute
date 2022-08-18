@@ -1,11 +1,13 @@
 class ShiftType {
   String name;
   Duration startTime;
-  Duration startTimeSturday;
+  Duration startTimeSaturday;
+  Duration expectedDuration;
   ShiftType(
       {required this.name,
       required this.startTime,
-      required this.startTimeSturday});
+      required this.startTimeSaturday,
+      required this.expectedDuration});
 }
 
 class DefaultConfig {
@@ -13,14 +15,23 @@ class DefaultConfig {
     ShiftType(
         name: 'Dagrit',
         startTime: Duration(hours: 10),
-        startTimeSturday: Duration(hours: 10)),
+        startTimeSaturday: Duration(hours: 10),
+        expectedDuration: Duration(hours: 8)),
     ShiftType(
         name: 'Avondrit',
         startTime: Duration(hours: 17),
-        startTimeSturday: Duration(hours: 15, minutes: 30)),
+        startTimeSaturday: Duration(hours: 15, minutes: 30),
+        expectedDuration: Duration(hours: 5)),
     ShiftType(
         name: 'Terugscan',
         startTime: Duration(hours: 14, minutes: 30),
-        startTimeSturday: Duration(hours: 13, minutes: 30)),
+        startTimeSaturday: Duration(hours: 13, minutes: 30),
+        expectedDuration: Duration(hours: 8)),
   ];
+
+  static ShiftType getShiftByName(String name) {
+    var result = shiftTypes.where((element) => element.name == name);
+    if (result.isEmpty) throw Exception('Type werkvorm bestaat niet [$name].');
+    return result.first;
+  }
 }

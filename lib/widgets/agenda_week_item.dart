@@ -74,18 +74,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
         });
 
     setState(() {
-      switch (widget.shift.type) {
-        case ShiftType.Avondrit:
-          shiftTypeName = 'Avondrit';
-          break;
-        case ShiftType.Dagrit:
-          shiftTypeName = 'Dagrit';
-          break;
-        case ShiftType.Terugscannen:
-          shiftTypeName = 'Terugscannen';
-          break;
-      }
-
+      shiftTypeName = widget.shift.type;
       setStartAndEndTime();
     });
   }

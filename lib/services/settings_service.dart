@@ -44,7 +44,7 @@ class SettingsService {
     if (!exists) {
       print('created settings.json');
       await file.create();
-      await writeSettingsToFile(DefaultSettings());
+      await file.writeAsString(jsonEncode(DefaultSettings()));
     }
 
     return File('$path/settings.json');

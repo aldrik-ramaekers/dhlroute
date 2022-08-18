@@ -20,6 +20,21 @@ class LocalShiftProviderService extends IProgramProviderService {
     return directory.path;
   }
 
+  Future<List<String>> getStoredFileList() async {
+    List<String> result = [];
+    Directory dir = await _localDir;
+    var list = dir.listSync();
+    for (var item in list) {
+      if (!item.path.endsWith('.json') || !item.path.contains('shifts')) {
+        continue;
+      }
+
+      result.add(item.path);
+    }
+
+    return result;
+  }
+
   Future<File> _localFile(String postfix) async {
     final path = await _localPath;
     String fullPath = '$path/shifts_' + postfix + '.json';
@@ -100,16 +115,10 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<List<Shift>> getPastShifts() async {
-    await Future.delayed(Duration(seconds: 1));
     List<Shift> shifts = [];
-    Directory dir = await _localDir;
-    var list = dir.listSync();
+    var list = await getStoredFileList();
     for (var item in list) {
-      if (!item.path.endsWith('.json') || !item.path.contains('shifts')) {
-        continue;
-      }
-
-      final file = File(item.path);
+      final file = File(item);
       final contents = await file.readAsString();
       final Iterable iterable = await jsonDecode(contents);
       List<Shift> data =
@@ -124,7 +133,6 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<List<Shift>> getShiftsForWeek(DateTime firstDayOfWeek) async {
-    await Future.delayed(Duration(seconds: 1));
     var items = await readShiftsFromFile(
         DateUtilities.DateUtils.firstDayOfWeek(firstDayOfWeek));
     List<Shift> result = [];

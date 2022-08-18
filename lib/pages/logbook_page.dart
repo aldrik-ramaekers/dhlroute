@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
@@ -36,7 +37,7 @@ class MonthData {
 }
 
 class _LogbookPageState extends State<LogbookPage> {
-  List<MonthData> months = [];
+  List<MonthData>? months;
 
   void updateMonthData(MonthData month, Shift shift) {
     month.shifts.add(shift);
@@ -44,12 +45,13 @@ class _LogbookPageState extends State<LogbookPage> {
   }
 
   void sortShifts(List<Shift> shifts) {
+    months = [];
     for (var shift in shifts) {
       DateTime firstDayOfMonth =
           DateUtilities.DateUtils.firstDayOfMonth(shift.start);
 
       bool found = false;
-      for (var month in months) {
+      for (var month in months!) {
         if (month.firstDayOfMonth == firstDayOfMonth) {
           updateMonthData(month, shift);
           found = true;
@@ -57,12 +59,12 @@ class _LogbookPageState extends State<LogbookPage> {
       }
 
       if (!found) {
-        months
+        months!
             .add(MonthData(firstDayOfMonth: firstDayOfMonth, shifts: [shift]));
       }
     }
 
-    months.sort((a, b) => b.firstDayOfMonth.compareTo(a.firstDayOfMonth));
+    months!.sort((a, b) => b.firstDayOfMonth.compareTo(a.firstDayOfMonth));
   }
 
   @override
@@ -82,7 +84,7 @@ class _LogbookPageState extends State<LogbookPage> {
   List<Widget> createMonthDataWidgets() {
     List<Widget> result = [];
 
-    for (var month in months) {
+    for (var month in months!) {
       result.add(Padding(
         padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
         child: Container(
@@ -120,10 +122,44 @@ class _LogbookPageState extends State<LogbookPage> {
     return result;
   }
 
+  Widget getDataList() {
+    var monthDataWidgets = createMonthDataWidgets();
+    return SafeArea(
+      child: CustomScrollView(
+        physics: null,
+        slivers: [
+          SliverPadding(padding: EdgeInsets.only(top: 20)),
+          SliverList(
+              delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
+              return monthDataWidgets[index];
+            },
+            childCount: monthDataWidgets.length,
+          )),
+          SliverPadding(padding: EdgeInsets.only(top: 20)),
+        ],
+      ),
+    );
+  }
+
+  Widget getLoadingScreen() {
+    return LoadingAnimationWidget.flickr(
+      leftDotColor: Style.titleColor,
+      rightDotColor: Style.background,
+      size: MediaQuery.of(context).size.width / 4,
+    );
+  }
+
+  Widget getLoadingScreenOrDataList() {
+    if (months != null) {
+      return getDataList();
+    } else {
+      return getLoadingScreen();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    var monthDataWidgets = createMonthDataWidgets();
-
     return ShaderMask(
       shaderCallback: (Rect rect) {
         return LinearGradient(
@@ -144,22 +180,7 @@ class _LogbookPageState extends State<LogbookPage> {
         ).createShader(rect);
       },
       blendMode: BlendMode.dstOut,
-      child: SafeArea(
-        child: CustomScrollView(
-          physics: null,
-          slivers: [
-            SliverPadding(padding: EdgeInsets.only(top: 20)),
-            SliverList(
-                delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                return monthDataWidgets[index];
-              },
-              childCount: monthDataWidgets.length,
-            )),
-            SliverPadding(padding: EdgeInsets.only(top: 20)),
-          ],
-        ),
-      ),
+      child: getLoadingScreenOrDataList(),
     );
   }
 }

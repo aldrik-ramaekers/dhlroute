@@ -100,6 +100,7 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<List<Shift>> getPastShifts() async {
+    await Future.delayed(Duration(seconds: 1));
     List<Shift> shifts = [];
     Directory dir = await _localDir;
     var list = dir.listSync();
@@ -123,6 +124,7 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<List<Shift>> getShiftsForWeek(DateTime firstDayOfWeek) async {
+    await Future.delayed(Duration(seconds: 1));
     var items = await readShiftsFromFile(
         DateUtilities.DateUtils.firstDayOfWeek(firstDayOfWeek));
     List<Shift> result = [];

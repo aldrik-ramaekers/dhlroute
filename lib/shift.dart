@@ -109,7 +109,7 @@ class Shift {
   }
 
   double getMinutePayRate() {
-    return 0.22916666;
+    return payRate / 60;
   }
 
   bool shiftIsOpenButBeforeToday() {

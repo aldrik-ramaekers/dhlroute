@@ -2,9 +2,7 @@
 - exceptions afhandelen binnen localShiftProvider en doorgeven aan ui
 
 # Nog te doen
-- laad animaties voor het lezen van locale bestanden (testen met delays)
 - uurloon van gebruiker gebruiken in berekeningen
-- versie toevoegen aan locale bestanden
 
 # Features
 - Aanmelden van werktijden
@@ -18,3 +16,4 @@
 - Laat salaris zien per shift
 - duidelijke berichtgeving en foutmeldingen
 - Instellingen pagina voor persoonlijke instellingen en salaris
+- Animaties tijdens het ophalen van data

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/shift.dart';
@@ -26,35 +27,41 @@ class AgendaWeek extends StatefulWidget {
 }
 
 class _AgendaWeekState extends State<AgendaWeek> {
-  List<Widget> weekItems = [];
+  List<Widget>? weekItems;
   StreamSubscription? eventbusSubscription;
 
-  void updateItems() {
+  void updateItems() async {
     setState(() {
-      shiftProvider
-          .getShiftsForWeek(this.widget.mondayOfWeek)
-          .then((value) => setState(() {
-                weekItems = [
-                  AgendaWeekTitle(
-                      weekNr: this.widget.weekNr,
-                      mondayOfWeek: this.widget.mondayOfWeek,
-                      isCurrentWeek: this.widget.isCurrentWeek),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                  )
-                ];
+      weekItems = null;
+    });
 
-                for (var item in value) {
-                  weekItems.add(new AgendaWeekItem(
-                    shift: item,
-                    updateParent: updateItems,
-                  ));
-                }
+    var data = await shiftProvider.getShiftsForWeek(this.widget.mondayOfWeek);
+    if (!mounted) return;
+    setState(() {
+      weekItems = [
+        AgendaWeekTitle(
+            weekNr: this.widget.weekNr,
+            mondayOfWeek: this.widget.mondayOfWeek,
+            isCurrentWeek: this.widget.isCurrentWeek),
+        Padding(
+          padding: const EdgeInsets.all(10),
+        )
+      ];
 
-                weekItems.add(Padding(
-                  padding: const EdgeInsets.all(50),
-                ));
-              }));
+      for (var item in data) {
+        weekItems!.add(new AgendaWeekItem(
+          shift: item,
+          updateParent: updateItems,
+        ));
+      }
+
+      if (data.isEmpty) {
+        weekItems!.add(Center(child: Text('Geen werktijden')));
+      }
+
+      weekItems!.add(Padding(
+        padding: const EdgeInsets.all(50),
+      ));
     });
   }
 
@@ -72,6 +79,55 @@ class _AgendaWeekState extends State<AgendaWeek> {
   void dispose() {
     eventbusSubscription?.cancel();
     super.dispose();
+  }
+
+  Widget getDataList() {
+    return SafeArea(
+      child: CustomScrollView(
+        physics: null,
+        slivers: [
+          SliverPadding(padding: EdgeInsets.only(top: 20)),
+          SliverList(
+              delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
+              return weekItems![index];
+            },
+            childCount: weekItems!.length,
+          )),
+          SliverPadding(padding: EdgeInsets.only(top: 20)),
+        ],
+      ),
+    );
+  }
+
+  Widget getLoadingScreen() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(10),
+        ),
+        AgendaWeekTitle(
+            weekNr: this.widget.weekNr,
+            mondayOfWeek: this.widget.mondayOfWeek,
+            isCurrentWeek: this.widget.isCurrentWeek),
+        Padding(
+          padding: const EdgeInsets.all(10),
+        ),
+        LoadingAnimationWidget.flickr(
+          leftDotColor: Style.titleColor,
+          rightDotColor: Style.background,
+          size: MediaQuery.of(context).size.width / 4,
+        )
+      ],
+    );
+  }
+
+  Widget getLoadingScreenOrDataList() {
+    if (weekItems != null) {
+      return getDataList();
+    } else {
+      return getLoadingScreen();
+    }
   }
 
   @override
@@ -96,22 +152,7 @@ class _AgendaWeekState extends State<AgendaWeek> {
         ).createShader(rect);
       },
       blendMode: BlendMode.dstOut,
-      child: SafeArea(
-        child: CustomScrollView(
-          physics: null,
-          slivers: [
-            SliverPadding(padding: EdgeInsets.only(top: 20)),
-            SliverList(
-                delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                return weekItems[index];
-              },
-              childCount: weekItems.length,
-            )),
-            SliverPadding(padding: EdgeInsets.only(top: 20)),
-          ],
-        ),
-      ),
+      child: getLoadingScreenOrDataList(),
     );
   }
 }

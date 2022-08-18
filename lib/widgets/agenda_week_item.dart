@@ -287,6 +287,15 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
         20; // padding
     double widthOfShiftType = remaining;
 
+    Widget shiftData = Container(
+        child: Text(
+          '| ' + shiftTypeName,
+        ),
+        width: widthOfShiftType);
+    if (widthOfShiftType < 50) {
+      shiftData = Padding(padding: const EdgeInsets.all(0));
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
       child: Container(
@@ -350,12 +359,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                           width: widthOfDates,
                         ),
                       ),
-                      Container(
-                        child: Text(
-                          '| ' + shiftTypeName,
-                        ),
-                        width: widthOfShiftType,
-                      ),
+                      shiftData,
                       Container(
                         child: Align(
                           child: startShiftWidget,

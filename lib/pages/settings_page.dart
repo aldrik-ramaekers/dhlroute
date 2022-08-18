@@ -45,7 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   labelText: 'Huidige uurloon',
                 ),
               ),
-              Padding(padding: const EdgeInsets.all(20)),
+              Padding(padding: const EdgeInsets.all(0)),
               TextButton(
                   onPressed: () async => await saveSettings(),
                   child: Text('Opslaan')),

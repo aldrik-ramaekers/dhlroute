@@ -4,6 +4,7 @@ import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/pages/home_page.dart';
+import 'package:training_planner/services/settings_service.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
 import 'package:training_planner/utils/date.dart';
@@ -29,7 +30,6 @@ class _AgendaPageState extends State<AgendaPage> {
 
   Future<void> addShiftsFromDialog() async {
     DateTime startDate = getWeek(currentSelectedPageIndex).mondayOfWeek;
-    String dropdownValue = 'Maandag';
 
     for (int i = 0; i < 7; i++) {
       DateTime dayOfWeek = startDate;
@@ -78,8 +78,10 @@ class _AgendaPageState extends State<AgendaPage> {
           break;
       }
 
-      bool success =
-          await shiftProvider.addShift(Shift(start: dayOfWeek, type: type));
+      Settings settings = await settingsService.readSettingsFromFile();
+
+      bool success = await shiftProvider.addShift(
+          Shift(start: dayOfWeek, type: type, payRate: settings.salary));
       if (!success) {
         messageService.showMessage(
             context,
@@ -112,6 +114,12 @@ class _AgendaPageState extends State<AgendaPage> {
       },
     );
 
+    double availableHeight = MediaQuery.of(context).size.height;
+    bool splitDays = false;
+    if (availableHeight < 640) {
+      splitDays = true;
+    }
+
     // show the dialog
     await showDialog(
       context: context,
@@ -120,35 +128,66 @@ class _AgendaPageState extends State<AgendaPage> {
           return AlertDialog(
             title: Text("Wanneer wil je werken?"),
             content: Row(children: [
-              ToggleButtons(
-                direction: Axis.vertical,
-                children: <Widget>[
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Ma')),
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Di')),
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Wo')),
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Do')),
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Vr')),
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Za')),
-                  Padding(padding: const EdgeInsets.all(15), child: Text('Zo')),
-                ],
-                onPressed: (int index) {
-                  setState(() {
-                    dayIsSelected[index] = !dayIsSelected[index];
-                  });
-                },
-                isSelected: dayIsSelected,
-              ),
-              Padding(padding: const EdgeInsets.all(20)),
+              !splitDays
+                  ? (ToggleButtons(
+                      direction: Axis.vertical,
+                      children: <Widget>[
+                        Text('Ma'),
+                        Text('Di'),
+                        Text('Wo'),
+                        Text('Do'),
+                        Text('Vr'),
+                        Text('Za'),
+                        Text('Zo'),
+                      ],
+                      onPressed: (int index) {
+                        setState(() {
+                          dayIsSelected[index] = !dayIsSelected[index];
+                        });
+                      },
+                      isSelected: dayIsSelected,
+                    ))
+                  : (ToggleButtons(
+                      direction: Axis.vertical,
+                      children: <Widget>[
+                        Text('Ma'),
+                        Text('Di'),
+                        Text('Wo'),
+                        Text('Do'),
+                      ],
+                      onPressed: (int index) {
+                        setState(() {
+                          dayIsSelected[index] = !dayIsSelected[index];
+                        });
+                      },
+                      isSelected: dayIsSelected.getRange(0, 4).toList(),
+                    )),
+              splitDays
+                  ? (ToggleButtons(
+                      direction: Axis.vertical,
+                      children: <Widget>[
+                        Text('Vr'),
+                        Text('Za'),
+                        Text('Zo'),
+                      ],
+                      onPressed: (int index) {
+                        setState(() {
+                          dayIsSelected[index + 4] = !dayIsSelected[index + 4];
+                        });
+                      },
+                      isSelected: dayIsSelected.getRange(4, 7).toList(),
+                    ))
+                  : (Padding(padding: const EdgeInsets.all(20))),
               ToggleButtons(
                 direction: Axis.vertical,
                 children: <Widget>[
                   Padding(
-                      padding: const EdgeInsets.all(15), child: Text('Dagrit')),
+                      padding: const EdgeInsets.all(0), child: Text('Dagrit')),
                   Padding(
-                      padding: const EdgeInsets.all(15),
+                      padding: const EdgeInsets.all(0),
                       child: Text('Avondrit')),
                   Padding(
-                      padding: const EdgeInsets.all(15),
+                      padding: const EdgeInsets.all(0),
                       child: Text('Terugscan')),
                 ],
                 onPressed: (int index) {

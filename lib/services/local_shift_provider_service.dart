@@ -33,6 +33,7 @@ class LocalShiftProviderService extends IProgramProviderService {
     try {
       final file = await _localFile;
       String content = jsonEncode(shifts);
+      print('writing content: ' + content);
       await file.writeAsString(content);
     } catch (e, stacktrace) {
       print(stacktrace);

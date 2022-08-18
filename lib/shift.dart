@@ -20,15 +20,21 @@ class Shift {
   DateTime start;
   DateTime? end;
   ShiftType type;
+  double payRate;
   bool isActive = false;
 
-  Shift({this.end = null, required this.start, required this.type});
+  Shift(
+      {this.end = null,
+      required this.start,
+      required this.type,
+      required this.payRate});
 
   Shift.fromJson(Map<String, dynamic> json)
       : start = DateTime.parse(json['start']),
         end = json['end'] == null ? null : DateTime.tryParse(json['end']),
         type = ShiftType.values.firstWhere((e) => e.toString() == json['type']),
-        isActive = json['isActive'] == 'true';
+        isActive = json['isActive'] == 'true',
+        payRate = double.parse(json['payRate']);
 
   Map<String, dynamic> toJson() {
     return {
@@ -36,6 +42,7 @@ class Shift {
       'end': end?.toIso8601String(),
       'type': type.toString(),
       'isActive': isActive.toString(),
+      'payRate': payRate.toStringAsFixed(2),
     };
   }
 

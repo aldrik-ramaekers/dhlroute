@@ -10,40 +10,50 @@ import 'package:path_provider/path_provider.dart';
 class LocalShiftProviderService extends IProgramProviderService {
   LocalShiftProviderService() {}
 
+  Future<Directory> get _localDir async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory;
+  }
+
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
     return directory.path;
   }
 
-  Future<File> get _localFile async {
+  Future<File> _localFile(String postfix) async {
     final path = await _localPath;
-    File file = File('$path/shifts.json');
+    String fullPath = '$path/shifts_' + postfix + '.json';
+    File file = File(fullPath);
 
     bool exists = await file.exists();
     if (!exists) {
-      print('created shifts.json');
+      print('creating ' + fullPath);
       await file.create();
-      await writeShiftsFromFile([]);
+      await file.writeAsString(jsonEncode([]));
     }
 
-    return File('$path/shifts.json');
+    return File(fullPath);
   }
 
-  Future<void> writeShiftsFromFile(List<Shift> shifts) async {
+  Future<void> writeShiftsToFile(List<Shift> shifts) async {
     try {
-      final file = await _localFile;
-      String content = jsonEncode(shifts);
-      print('writing content: ' + content);
-      await file.writeAsString(content);
+      for (var shift in shifts) {
+        final file = await _localFile(
+            DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
+        print(DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
+        String content = jsonEncode(shifts);
+        print('writing content to ' + file.path + ' -- ' + content);
+        await file.writeAsString(content);
+      }
     } catch (e, stacktrace) {
       print(stacktrace);
       print(e);
     }
   }
 
-  Future<List<Shift>> readShiftsFromFile() async {
+  Future<List<Shift>> readShiftsFromFile(DateTime startOfWeek) async {
     try {
-      final file = await _localFile;
+      final file = await _localFile(startOfWeek.toString());
       final contents = await file.readAsString();
       final Iterable iterable = await jsonDecode(contents);
       List<Shift> data =
@@ -59,7 +69,8 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<void> updateShift(Shift shift) async {
-    List<Shift> savedShifts = await readShiftsFromFile();
+    List<Shift> savedShifts = await readShiftsFromFile(
+        DateUtilities.DateUtils.firstDayOfWeek(shift.start));
     for (var item in savedShifts) {
       if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
         item.isActive = shift.isActive;
@@ -69,12 +80,13 @@ class LocalShiftProviderService extends IProgramProviderService {
         break;
       }
     }
-    await writeShiftsFromFile(savedShifts);
+    await writeShiftsToFile(savedShifts);
   }
 
   @override
   Future<bool> addShift(Shift shift) async {
-    List<Shift> savedShifts = await readShiftsFromFile();
+    List<Shift> savedShifts = await readShiftsFromFile(
+        DateUtilities.DateUtils.firstDayOfWeek(shift.start));
     for (var item in savedShifts) {
       if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
         return false;
@@ -82,13 +94,28 @@ class LocalShiftProviderService extends IProgramProviderService {
     }
 
     savedShifts.add(shift);
-    await writeShiftsFromFile(savedShifts);
+    await writeShiftsToFile(savedShifts);
     return true;
   }
 
   @override
   Future<List<Shift>> getPastShifts() async {
-    List<Shift> shifts = await readShiftsFromFile();
+    List<Shift> shifts = [];
+    Directory dir = await _localDir;
+    var list = dir.listSync();
+    for (var item in list) {
+      if (!item.path.endsWith('.json') || !item.path.contains('shifts')) {
+        continue;
+      }
+
+      final file = File(item.path);
+      final contents = await file.readAsString();
+      final Iterable iterable = await jsonDecode(contents);
+      List<Shift> data =
+          List<Shift>.from(iterable.map((model) => Shift.fromJson(model)));
+      shifts.addAll(data);
+    }
+
     shifts.sort((a, b) => a.start.compareTo(b.start));
 
     return shifts;
@@ -96,7 +123,8 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<List<Shift>> getShiftsForWeek(DateTime firstDayOfWeek) async {
-    var items = await getPastShifts();
+    var items = await readShiftsFromFile(
+        DateUtilities.DateUtils.firstDayOfWeek(firstDayOfWeek));
     List<Shift> result = [];
 
     for (var item in items) {
@@ -111,13 +139,14 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<void> deleteShift(Shift shift) async {
-    List<Shift> savedShifts = await readShiftsFromFile();
+    List<Shift> savedShifts = await readShiftsFromFile(
+        DateUtilities.DateUtils.firstDayOfWeek(shift.start));
     for (var item in savedShifts) {
       if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
         savedShifts.remove(item);
         break;
       }
     }
-    await writeShiftsFromFile(savedShifts);
+    await writeShiftsToFile(savedShifts);
   }
 }

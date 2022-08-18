@@ -1,7 +1,5 @@
 # Aanpassingen
 - exceptions afhandelen binnen localShiftProvider en doorgeven aan ui
-- uursalaris opslaan per shift zodat aanpassingen oudere shifts niet aanpassen
-- bestand per week maken
 
 # Nog te doen
 - laad animaties voor het lezen van locale bestanden (testen met delays)
@@ -13,7 +11,7 @@
 - Begin en eindtijd invullen/aanpassen per shift
 - Begin en eindtijd live bijhouden
 - Maandelijks overzicht van gewerkte uren en inkomen
-- data wordt lokaal opgeslagen
+- data wordt lokaal en veilig opgeslagen
 - gemakkelijk meerdere shifts tegelijk aanmelden
 - schatting over aantal ingeplande uren en inkomen
 - werkt on alle soorten schermen

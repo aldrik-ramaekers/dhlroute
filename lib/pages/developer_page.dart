@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:training_planner/config/defaults.dart';
 import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/services/local_shift_provider_service.dart';
@@ -15,9 +16,17 @@ class DeveloperPage extends StatefulWidget {
 }
 
 class _DeveloperPageState extends State<DeveloperPage> {
+  bool canUseLocalAuth = false;
+
   @override
   initState() {
     super.initState();
+
+    auth.canCheckBiometrics.then((bio) => {
+          auth
+              .isDeviceSupported()
+              .then((supported) => {canUseLocalAuth = bio && supported})
+        });
   }
 
   void clearLocalFiles() async {
@@ -47,8 +56,22 @@ class _DeveloperPageState extends State<DeveloperPage> {
           padding: const EdgeInsets.all(50),
           child: Column(
             children: [
+              Text('Versie ' + program_version),
               TextButton(
-                  onPressed: () async => clearLocalFiles(),
+                  onPressed: () {
+                    if (canUseLocalAuth) {
+                      auth
+                          .authenticate(
+                              localizedReason:
+                                  'Weet je zeker dat je alle locale bestanden wilt verwijderen?')
+                          .then((value) => {
+                                if (value) {clearLocalFiles()}
+                              })
+                          .catchError((f) => {});
+                    } else {
+                      clearLocalFiles();
+                    }
+                  },
                   child: Text('Bestanden verwijderen')),
             ],
           ),

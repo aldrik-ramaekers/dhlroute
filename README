@@ -1,11 +1,9 @@
 # Aanpassingen
-- exceptions afhandelen binnen localShiftProvider en doorgeven aan ui
 - optie om bepaalde features aan en uit te zetten on config/config.dart
-- verplaats style naar config/style.dart
-- verplaats hardcoded kleuren naar style.dart
 
 # Nog te doen
 - Laat gebruiker shift types aanpassen in instellingen pagina
+- notifications werken niet op mobiel
 
 # Features
 - Aanmelden van werktijden

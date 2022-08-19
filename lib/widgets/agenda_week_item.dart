@@ -120,20 +120,28 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   Widget createStopShiftButton() {
     return TextButton(
         onPressed: () {
-          auth
-              .authenticate(
-                  localizedReason: 'Weet je zeker dat je wilt eindigen?')
-              .then((value) => {
-                    if (value)
-                      {
-                        setState(() {
-                          widget.shift.setIsActive(false);
-                          shiftProvider.updateShift(widget.shift);
-                          stopNotificationForActiveSession();
-                        })
-                      }
-                  })
-              .catchError((f) => {});
+          if (canUseLocalAuth) {
+            auth
+                .authenticate(
+                    localizedReason: 'Weet je zeker dat je wilt eindigen?')
+                .then((value) => {
+                      if (value && mounted)
+                        {
+                          setState(() {
+                            widget.shift.setIsActive(false);
+                            shiftProvider.updateShift(widget.shift);
+                            stopNotificationForActiveSession();
+                          })
+                        }
+                    })
+                .catchError((f) => {});
+          } else {
+            setState(() {
+              widget.shift.setIsActive(false);
+              shiftProvider.updateShift(widget.shift);
+              stopNotificationForActiveSession();
+            });
+          }
         },
         child: Text('Einde'));
   }
@@ -253,10 +261,10 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   @override
   Widget build(BuildContext context) {
     Widget startShiftWidget = createShiftModifyButton();
-    TextStyle endDateTextStyle = TextStyle(color: Colors.black);
+    TextStyle endDateTextStyle = TextStyle(color: Style.listEntryStandardColor);
 
     if (!widget.shift.isDone()) {
-      endDateTextStyle = TextStyle(color: Color.fromARGB(80, 0, 0, 0));
+      endDateTextStyle = TextStyle(color: Style.listEntryTransparentColor);
     }
 
     setStartAndEndTime();
@@ -323,22 +331,32 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
                       ),
                       Container(
                         padding: const EdgeInsets.only(left: 10),
-                        child: Text(
-                          DateHelper.getWeekdayName(widget.shift.start.weekday),
-                          style: Style.listItemTitletextBold,
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              DateHelper.getWeekdayName(
+                                  widget.shift.start.weekday),
+                              style: Style.listItemTitletextBold,
+                            ),
+                            Text(
+                              "${widget.shift.start.day.toString().padLeft(2, '0')}e",
+                            ),
+                          ],
                         ),
                         width: widthOfWeekday,
                       ),
                       GestureDetector(
                         onLongPress: () {
                           requestStartAndEndTimeForShift()
-                              .then((e) => {setState(() {})});
+                              .then((e) => {if (mounted) setState(() {})});
                         },
                         child: Container(
                           child: RichText(
                             text: TextSpan(
-                              style: TextStyle(color: Colors.black),
+                              style: TextStyle(
+                                  color: Style.listEntryStandardColor),
                               children: [
                                 TextSpan(text: ' | ' + shiftTime),
                                 TextSpan(

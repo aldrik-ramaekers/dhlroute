@@ -72,12 +72,15 @@ class _LogbookPageState extends State<LogbookPage> {
     super.initState();
 
     shiftProvider.getPastShifts().then(
-          (value) => setState(
-            () {
-              List<Shift> allShifts = value;
-              sortShifts(allShifts);
-            },
-          ),
+          (value) => {
+            if (mounted)
+              setState(
+                () {
+                  List<Shift> allShifts = value;
+                  sortShifts(allShifts);
+                },
+              )
+          },
         );
   }
 
@@ -89,8 +92,8 @@ class _LogbookPageState extends State<LogbookPage> {
         padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
         child: Container(
           decoration: BoxDecoration(
-              border: Border.all(color: Color.fromARGB(255, 140, 140, 180)),
-              color: Color.fromARGB(255, 180, 180, 200),
+              border: Border.all(color: Style.logbookEntryBorder),
+              color: Style.logbookEntryBackground,
               borderRadius: BorderRadius.all(Radius.circular(8))),
           child: Padding(
             padding: const EdgeInsets.all(8),

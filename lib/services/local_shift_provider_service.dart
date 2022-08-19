@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:training_planner/config/defaults.dart';
 import 'package:training_planner/config/old_data.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
+import 'package:training_planner/services/log_service.dart';
 import 'package:training_planner/shift.dart';
 import 'package:uuid/uuid.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
@@ -30,7 +31,7 @@ class LocalShiftProviderService extends IProgramProviderService {
       if (startDate.hour > 12 && startDate.hour < 15)
         type = DefaultConfig.shiftTypes[2];
 
-      print(startDate.toString() + ' -> ' + endDate.toString());
+      LogService.log(startDate.toString() + ' -> ' + endDate.toString());
       await addShift(Shift(
           start: startDate, type: type.name, end: endDate, payRate: 13.75));
     }
@@ -73,7 +74,7 @@ class LocalShiftProviderService extends IProgramProviderService {
 
     bool exists = await file.exists();
     if (!exists) {
-      print('creating ' + fullPath);
+      LogService.log('creating ' + fullPath);
       await file.create();
       await file.writeAsString(jsonEncode([]));
     }
@@ -86,14 +87,15 @@ class LocalShiftProviderService extends IProgramProviderService {
       for (var shift in shifts) {
         final file = await _localFile(
             DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
-        print(DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
+        LogService.log(
+            DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
         String content = jsonEncode(shifts);
-        print('writing content to ' + file.path + ' -- ' + content);
+        LogService.log('writing content to ' + file.path + ' -- ' + content);
         await file.writeAsString(content);
       }
     } catch (e, stacktrace) {
-      print(stacktrace);
-      print(e);
+      LogService.log(stacktrace);
+      LogService.log(e);
     }
   }
 
@@ -107,8 +109,8 @@ class LocalShiftProviderService extends IProgramProviderService {
 
       return data;
     } catch (e, stacktrace) {
-      print(stacktrace);
-      print(e);
+      LogService.log(stacktrace);
+      LogService.log(e);
       return [];
     }
   }
@@ -174,6 +176,8 @@ class LocalShiftProviderService extends IProgramProviderService {
         result.add(item);
       }
     }
+
+    result.sort((a, b) => a.start.compareTo(b.start));
 
     return result;
   }

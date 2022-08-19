@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:training_planner/services/log_service.dart';
 
 class Settings {
   double salary;
@@ -42,7 +43,7 @@ class SettingsService {
 
     bool exists = await file.exists();
     if (!exists) {
-      print('created settings.json');
+      LogService.log('created settings.json');
       await file.create();
       await file.writeAsString(jsonEncode(DefaultSettings()));
     }
@@ -54,11 +55,11 @@ class SettingsService {
     try {
       final file = await _localFile;
       String content = jsonEncode(settings);
-      print('writing to file: ' + content);
+      LogService.log('writing to file: ' + content);
       await file.writeAsString(content);
     } catch (e, stacktrace) {
-      print(stacktrace);
-      print(e);
+      LogService.log(stacktrace);
+      LogService.log(e);
     }
   }
 
@@ -66,13 +67,13 @@ class SettingsService {
     try {
       final file = await _localFile;
       final contents = await file.readAsString();
-      print('read from file: ' + contents);
+      LogService.log('read from file: ' + contents);
       var raw = await jsonDecode(contents);
       var settings = Settings.fromJson(raw);
       return settings;
     } catch (e, stacktrace) {
-      print(stacktrace);
-      print(e);
+      LogService.log(stacktrace);
+      LogService.log(e);
       writeSettingsToFile(DefaultSettings());
       return DefaultSettings();
     }

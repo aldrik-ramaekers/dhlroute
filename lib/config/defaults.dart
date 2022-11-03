@@ -19,17 +19,17 @@ class DefaultConfig {
         name: 'Dagrit',
         startTime: Duration(hours: 10),
         startTimeSaturday: Duration(hours: 10),
-        expectedDuration: Duration(hours: 8)),
+        expectedDuration: Duration(hours: 6, minutes: 30)),
     ShiftType(
         name: 'Avondrit',
         startTime: Duration(hours: 17),
         startTimeSaturday: Duration(hours: 15, minutes: 30),
-        expectedDuration: Duration(hours: 5)),
+        expectedDuration: Duration(hours: 4)),
     ShiftType(
         name: 'Terugscan',
         startTime: Duration(hours: 14, minutes: 30),
         startTimeSaturday: Duration(hours: 13, minutes: 30),
-        expectedDuration: Duration(hours: 8)),
+        expectedDuration: Duration(hours: 7)),
   ];
 
   static ShiftType getShiftByName(String name) {

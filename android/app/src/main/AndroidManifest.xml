@@ -5,10 +5,17 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
    <application
         android:label="DHL Schema"
         android:icon="@mipmap/ic_launcher">
 		<service android:name="com.pravera.flutter_foreground_task.service.ForegroundService" />
+
+		<meta-data android:name="com.here.sdk.access_key_id" android:value="7AOr--BqzFzBELeBUXypqQ" />
+		<meta-data android:name="com.here.sdk.access_key_secret" android:value="27yrhnsn-in-FVLWie-DKmS44XWsyIVIhgkhbdZB5glP9vyY3dIuZDBq23LvH-UwslyRCHt7vkgJtwADxxq-AQ" />
+
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

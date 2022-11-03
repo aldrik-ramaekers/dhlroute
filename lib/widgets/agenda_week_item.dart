@@ -28,40 +28,22 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   String shiftTimeEnd = '';
   bool canUseLocalAuth = false;
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
   Future<void> _showOngoingNotification() async {
     if (widget.shift.isDone()) return;
 
     AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails('channel_1', 'Actieve Sessie',
-            channelDescription: '3:45 => \$50',
-            importance: Importance.max,
-            priority: Priority.high,
-            ongoing: true,
+        AndroidNotificationDetails('sussymogus', 'Actieve Sessie',
+            channelDescription: 'poopies',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
             icon: 'dhl',
-            showProgress: true,
-            onlyAlertOnce: true,
-            maxProgress: 100,
-            channelAction: AndroidNotificationChannelAction.update,
-            progress: widget.shift.getPercentage(),
-            color: Style.background,
-            autoCancel: false);
+            channelAction: AndroidNotificationChannelAction.update);
     NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    String elapsedTime =
-        "${widget.shift.getElapsedSessionTime().inHours.toString().padLeft(2, '0')}:${(widget.shift.getElapsedSessionTime().inMinutes % 60).toString().padLeft(2, '0')}";
-
     await flutterLocalNotificationsPlugin.show(
-        0,
-        'Sessie actief',
-        '⏱ ' +
-            elapsedTime +
-            ' => €' +
-            widget.shift.getMoneyForActiveSession().toStringAsFixed(2),
-        platformChannelSpecifics);
+        0, 'Sessie actief', 'hallo', platformChannelSpecifics,
+        payload: 'item x');
   }
 
   void initState() {
@@ -149,7 +131,8 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   Future requestStartAndEndTimeForShift() async {
     bool alsoAskForEndTime =
         widget.shift.getShiftStatus() == ShiftStatus.OldOpen ||
-            widget.shift.getShiftStatus() == ShiftStatus.Closed;
+            widget.shift.getShiftStatus() == ShiftStatus.Closed ||
+            widget.shift.canStart();
 
     final TimeOfDay? startTime = await showTimePicker(
       context: context,
@@ -204,8 +187,17 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   }
 
   Widget createOldShiftInfoText() {
-    return Text(
-      '€' + widget.shift.getEarnedMoney().toStringAsFixed(2),
+    final p = widget.shift.getElapsedSessionTime();
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text("${p.inHours}h ${p.inMinutes.remainder(60)}m"),
+        Text(
+          '€' + widget.shift.getEarnedMoney().toStringAsFixed(2),
+        ),
+      ],
     );
   }
 
@@ -225,13 +217,13 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
 
   void showDeleteShiftModal() {
     // set up the buttons
-    Widget cancelButton = FlatButton(
+    Widget cancelButton = TextButton(
       child: Text("Terug"),
       onPressed: () {
         Navigator.pop(context);
       },
     );
-    Widget continueButton = FlatButton(
+    Widget continueButton = TextButton(
       child: Text("Verwijderen"),
       onPressed: () async {
         await shiftProvider.deleteShift(widget.shift);

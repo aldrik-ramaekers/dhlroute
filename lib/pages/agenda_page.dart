@@ -89,13 +89,13 @@ class _AgendaPageState extends State<AgendaPage> {
     currentSelectedShiftIndex = 1;
 
     // set up the buttons
-    Widget cancelButton = FlatButton(
+    Widget cancelButton = TextButton(
       child: Text("Terug"),
       onPressed: () {
         Navigator.pop(context);
       },
     );
-    Widget continueButton = FlatButton(
+    Widget continueButton = TextButton(
       child: Text("Ok"),
       onPressed: () async {
         await addShiftsFromDialog();

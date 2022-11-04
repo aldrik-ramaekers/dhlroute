@@ -5,9 +5,11 @@ import 'package:event_bus/event_bus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:training_planner/services/iroute_provider_service.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
 import 'package:training_planner/services/log_service.dart';
 import 'package:training_planner/services/messaging_service.dart';
+import 'package:training_planner/services/mock_route_provider_service.dart';
 import 'package:training_planner/services/mock_shift_provider_service.dart';
 import 'package:training_planner/services/local_shift_provider_service.dart';
 import 'package:training_planner/services/settings_service.dart';
@@ -48,6 +50,7 @@ void _initializeHERESDK() async {
   }
 }
 
+final IRouteProviderService routeProvider = MockRouteProviderService();
 final IProgramProviderService shiftProvider = LocalShiftProviderService();
 final LocalAuthentication auth = LocalAuthentication();
 final MessagingService messageService = MessagingService();

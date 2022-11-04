@@ -85,6 +85,11 @@ class _NavigationPageState extends State<NavigationPage> {
     _routingExample?.changeZoom(_routingExample!.currentZoom - 1);
   }
 
+  void _mockStopComplete() {
+    _routingExample?.routeSectionCursor++;
+    _routingExample?.updateHighlightedRouteSections();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +99,10 @@ class _NavigationPageState extends State<NavigationPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            FloatingActionButton(
+              onPressed: () => _mockStopComplete(),
+              child: Icon(Icons.check_circle),
+            ),
             Visibility(
               visible: _routingExample == null
                   ? false
@@ -112,6 +121,7 @@ class _NavigationPageState extends State<NavigationPage> {
               onPressed: () => _zoomOut(),
               child: Icon(Icons.zoom_out),
             ),
+            Padding(padding: EdgeInsets.all(2)),
             FloatingActionButton(
               onPressed: () => _zoomIn(),
               child: Icon(Icons.zoom_in),
@@ -132,7 +142,9 @@ class _NavigationPageState extends State<NavigationPage> {
         (MapError? error) {
       if (error == null) {
         _routingExample = RoutingExample(hereMapController);
-        _routingExample?.addRoute();
+        routeProvider
+            .getRoute(0)
+            .then((value) => _routingExample?.addRoute(value));
       } else {
         print("Map scene not loaded. MapError: " + error.toString());
       }
@@ -148,33 +160,5 @@ class _NavigationPageState extends State<NavigationPage> {
 
     _routingExample?.timer?.cancel();
     super.dispose();
-  }
-
-  // A helper method to show a dialog.
-  Future<void> _showDialog(String title, String message) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(message),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 }

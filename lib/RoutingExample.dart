@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:here_sdk/animation.dart';
 import 'package:here_sdk/gestures.dart';
+import 'package:here_sdk/search.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:here_sdk/core.dart';
@@ -17,6 +18,7 @@ import 'package:image/image.dart' as image;
 import 'package:here_sdk/routing.dart' as here;
 import 'package:training_planner/events/MapPanningEvent.dart';
 import 'package:training_planner/pages/navigation_page.dart';
+import 'route.dart' as DHLRoute;
 
 import 'main.dart';
 
@@ -28,9 +30,13 @@ class RoutingExample {
   bool isLookingAround = false;
   double currentZoom = 20;
   HereMapController hereMapController;
-  List<MapPolyline> _mapPolylines = [];
+  List<MapPolyline> _routeSections = [];
+  int routeSectionCursor = 0;
+
+  late DHLRoute.Route _route;
   late RoutingEngine _routingEngine;
   late GeoCoordinates lastPosition = GeoCoordinates(0, 0);
+  late SearchOptions _searchOptions;
 
   RoutingExample(HereMapController _hereMapController)
       : hereMapController = _hereMapController {
@@ -39,6 +45,10 @@ class RoutingExample {
     } on InstantiationException {
       throw ("Initialization of RoutingEngine failed.");
     }
+
+    _searchOptions = SearchOptions.withDefaults();
+    _searchOptions.languageCode = LanguageCode.enUs;
+    _searchOptions.maxItems = 5;
 
     //double distanceToEarthInMeters = currentZoom;
     //MapMeasure mapMeasureZoom =
@@ -55,12 +65,6 @@ class RoutingExample {
       isLookingAround = true;
       eventBus.fire(MapPanningEvent(true));
     });
-  }
-
-  Future<Uint8List> _loadFileAsUint8List(String fileName) async {
-    // The path refers to the assets directory as specified in pubspec.yaml.
-    ByteData fileData = await rootBundle.load('assets/' + fileName);
-    return Uint8List.view(fileData.buffer);
   }
 
   void _updateLocation(Position value) {
@@ -105,7 +109,6 @@ class RoutingExample {
         GeoCoordinates(geoCoordinates.latitude, geoCoordinates.longitude),
         orientation,
         MapMeasure(MapMeasureKind.zoomLevel, currentZoom));
-    debugPrint('XDDDD' + currentZoom.toString());
   }
 
   Widget _createWidget(String label, Color backgroundColor) {
@@ -125,53 +128,109 @@ class RoutingExample {
     );
   }
 
-  void showAnchoredMapViewPin(GeoCoordinates coords) {
+  void showAnchoredMapViewPin(GeoCoordinates coords, String text) {
     var widgetPin = hereMapController.pinWidget(
-        _createWidget("43", Color.fromARGB(200, 0, 144, 138)), coords);
+        _createWidget(text, Color.fromARGB(200, 0, 144, 138)), coords);
     widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
   }
 
-  Future<void> addRoute() async {
-    var startGeoCoordinates = GeoCoordinates(50.8434572, 5.7381166);
-    var destinationGeoCoordinates = GeoCoordinates(50.8474741, 5.7330341);
-    var startWaypoint = Waypoint.withDefaults(startGeoCoordinates);
-    startWaypoint.type = WaypointType.stopover;
-    var destinationWaypoint = Waypoint.withDefaults(destinationGeoCoordinates);
-    destinationWaypoint.type = WaypointType.stopover;
+  Future<void> addRoute(DHLRoute.Route route) async {
+    if (route.tasks == null) return;
+    _route = route;
 
-    List<Waypoint> waypoints = [startWaypoint, destinationWaypoint];
+    Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    GeoCoordinates routeStartCoords =
+        GeoCoordinates(currentPosition.latitude, currentPosition.longitude);
 
-    _routingEngine.calculateCarRoute(waypoints, CarOptions.withDefaults(),
+    List<Waypoint> waypoints = [Waypoint.withDefaults(routeStartCoords)];
+
+    GeoCoordinates previousCoords = routeStartCoords;
+    for (final item in route.tasks!) {
+      var destinationGeoCoordinates = GeoCoordinates(
+          double.parse(item.addressLatitude!),
+          double.parse(item.addressLongitude!));
+
+      if (item.groupFirst == 'false') continue;
+
+      waypoints.add(Waypoint.withDefaults(destinationGeoCoordinates));
+      showAnchoredMapViewPin(
+          destinationGeoCoordinates, item.deliverySequenceNumber.toString());
+
+      previousCoords = destinationGeoCoordinates;
+    }
+
+    PedestrianOptions f = PedestrianOptions.withDefaults();
+    f.routeOptions.alternatives = 0;
+    f.routeOptions.optimizationMode = OptimizationMode.fastest;
+
+    _routingEngine.calculatePedestrianRoute(waypoints, f,
         (RoutingError? routingError, List<here.Route>? routeList) async {
       if (routingError == null) {
-        // When error is null, then the list guaranteed to be not null.
         here.Route route = routeList!.first;
-        _showRouteOnMap(route, destinationGeoCoordinates);
+
+        _showRouteOnMap(route);
+
+        for (int i = 0; i < route.sections.length; i++) {
+          _showLineToHouse(route.sections.elementAt(i),
+              waypoints.elementAt(i + 1).coordinates);
+        }
+
+        updateHighlightedRouteSections();
       } else {
         var error = routingError.toString();
       }
     });
-
-    showAnchoredMapViewPin(destinationGeoCoordinates);
   }
 
-  _showRouteOnMap(here.Route route, GeoCoordinates destCoords) {
-    GeoPolyline routeGeoPolyline = route.geometry;
-    double widthInPixels = 15;
+  _showLineToHouse(Section section, GeoCoordinates houseCoords) {
+    GeoPolyline routeGeoPolyline = section.geometry;
 
-    // Line of route
-    MapPolyline routeMapPolyline = MapPolyline(
-        routeGeoPolyline, widthInPixels, Color.fromARGB(160, 0, 144, 138));
-    hereMapController.mapScene.addMapPolyline(routeMapPolyline);
-
-    // Line from road to house
     GeoPolyline walkLine =
-        GeoPolyline([routeGeoPolyline.vertices.last, destCoords]);
+        GeoPolyline([routeGeoPolyline.vertices.last, houseCoords]);
     MapPolyline walkPathPolyline =
         MapPolyline(walkLine, 8, Color.fromARGB(160, 255, 20, 20));
     hereMapController.mapScene.addMapPolyline(walkPathPolyline);
 
-    _mapPolylines.add(walkPathPolyline);
-    _mapPolylines.add(routeMapPolyline);
+    //_routeSections.add(walkPathPolyline);
+  }
+
+  _showRouteOnMap(here.Route route) {
+    double widthInPixels = 15;
+
+    for (int i = 0; i < route.sections.length; i++) {
+      Section section = route.sections.elementAt(i);
+      GeoPolyline routeGeoPolyline = section.geometry;
+
+      MapPolyline routeMapPolyline = MapPolyline(
+          routeGeoPolyline, widthInPixels, Color.fromARGB(160, 0, 144, 138));
+      hereMapController.mapScene.addMapPolyline(routeMapPolyline);
+
+      _routeSections.add(routeMapPolyline);
+    }
+  }
+
+  void updateHighlightedRouteSections() {
+    for (int i = 0; i < _routeSections.length; i++) {
+      MapPolyline section = _routeSections.elementAt(i);
+      int maxSections = 5;
+
+      // previous section
+      if (i == routeSectionCursor - 1) {
+        section.lineColor = Color.fromARGB(160, 168, 113, 108);
+      }
+      // current and next 5 sections
+      else if (i >= routeSectionCursor &&
+          i < routeSectionCursor + maxSections) {
+        section.lineColor = Color.fromARGB(
+            (255 - ((255 / (maxSections + 1)) * (i - routeSectionCursor)))
+                .toInt(),
+            0,
+            144,
+            138);
+      } else {
+        section.lineColor = Color.fromARGB(0, 255, 255, 255);
+      }
+    }
   }
 }

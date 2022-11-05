@@ -49,8 +49,8 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
   void initState() {
     super.initState();
 
-    auth.canCheckBiometrics.then((bio) => {
-          auth
+    localAuthService.canCheckBiometrics.then((bio) => {
+          localAuthService
               .isDeviceSupported()
               .then((supported) => {canUseLocalAuth = bio && supported})
         });
@@ -103,7 +103,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
     return TextButton(
         onPressed: () {
           if (canUseLocalAuth) {
-            auth
+            localAuthService
                 .authenticate(
                     localizedReason: 'Weet je zeker dat je wilt eindigen?')
                 .then((value) => {

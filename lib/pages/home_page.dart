@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:training_planner/pages/agenda_page.dart';
+import 'package:training_planner/pages/delivery_login_page.dart';
 import 'package:training_planner/pages/developer_page.dart';
 import 'package:training_planner/pages/logbook_page.dart';
 import 'package:training_planner/pages/navigation_page.dart';
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     _widgetOptions = <Widget>[
       new AgendaPage(agendaWeekNr: widget.agendaWeekNr),
       new LogbookPage(),
-      new NavigationPage(),
+      new DeliveryLoginPage(),
     ];
 
     super.initState();
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> {
       _widgetOptions = <Widget>[
         new AgendaPage(agendaWeekNr: widget.agendaWeekNr),
         new LogbookPage(),
-        new NavigationPage(),
+        new DeliveryLoginPage(),
       ];
       _selectedIndex = index;
     });
@@ -110,11 +111,11 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
-            label: 'Logboek',
+            label: 'Registratie',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.pin_drop),
-            label: 'Delivery',
+            label: 'Bezorging',
           ),
         ],
         currentIndex: _selectedIndex,

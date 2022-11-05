@@ -22,8 +22,8 @@ class _DeveloperPageState extends State<DeveloperPage> {
   initState() {
     super.initState();
 
-    auth.canCheckBiometrics.then((bio) => {
-          auth
+    localAuthService.canCheckBiometrics.then((bio) => {
+          localAuthService
               .isDeviceSupported()
               .then((supported) => {canUseLocalAuth = bio && supported})
         });
@@ -60,7 +60,7 @@ class _DeveloperPageState extends State<DeveloperPage> {
               TextButton(
                   onPressed: () {
                     if (canUseLocalAuth) {
-                      auth
+                      localAuthService
                           .authenticate(
                               localizedReason:
                                   'Weet je zeker dat je alle locale bestanden wilt verwijderen?')

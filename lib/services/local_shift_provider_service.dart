@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:training_planner/config/defaults.dart';
 import 'package:training_planner/config/old_data.dart';
@@ -84,11 +85,13 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   Future<void> writeShiftsToFile(List<Shift> shifts) async {
     try {
-      for (var shift in shifts) {
+      if (shifts.isNotEmpty) {
         final file = await _localFile(
-            DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
+            DateUtilities.DateUtils.firstDayOfWeek(shifts.first.start)
+                .toString());
         LogService.log(
-            DateUtilities.DateUtils.firstDayOfWeek(shift.start).toString());
+            DateUtilities.DateUtils.firstDayOfWeek(shifts.first.start)
+                .toString());
         String content = jsonEncode(shifts);
         LogService.log('writing content to ' + file.path + ' -- ' + content);
         await file.writeAsString(content);
@@ -184,14 +187,22 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   @override
   Future<void> deleteShift(Shift shift) async {
-    List<Shift> savedShifts = await readShiftsFromFile(
-        DateUtilities.DateUtils.firstDayOfWeek(shift.start));
+    DateTime firstDayOfWeek =
+        DateUtilities.DateUtils.firstDayOfWeek(shift.start);
+
+    List<Shift> savedShifts = await readShiftsFromFile(firstDayOfWeek);
     for (var item in savedShifts) {
       if (DateUtilities.DateUtils.isSameDay(shift.start, item.start)) {
         savedShifts.remove(item);
         break;
       }
     }
+
+    if (savedShifts.isEmpty) {
+      final file = await _localFile(firstDayOfWeek.toString());
+      await file.delete();
+    }
+
     await writeShiftsToFile(savedShifts);
   }
 }

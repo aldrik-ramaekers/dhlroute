@@ -8,6 +8,8 @@ import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/RoutingExample.dart';
 import 'package:training_planner/events/MapPanningEvent.dart';
+import 'package:training_planner/events/NextStopLoadedEvent.dart';
+import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
@@ -28,8 +30,9 @@ class NavigationPage extends StatefulWidget {
 
 class _NavigationPageState extends State<NavigationPage> {
   RoutingExample? _routingExample;
-
   StreamSubscription? panGestureEvent;
+  StreamSubscription? taskLoadedEvent;
+  ActiveTask? activeTask;
 
   Future<bool> _handleLocationPermission() async {
     bool serviceEnabled;
@@ -69,6 +72,10 @@ class _NavigationPageState extends State<NavigationPage> {
     panGestureEvent = eventBus.on<MapPanningEvent>().listen((event) {
       changeIsLookingAround(event.isPanning);
     });
+
+    taskLoadedEvent = eventBus.on<NextStopLoadedEvent>().listen((event) {
+      setState(() {});
+    });
   }
 
   void changeIsLookingAround(bool val) {
@@ -86,52 +93,135 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   void _mockStopComplete() {
-    _routingExample?.routeSectionCursor++;
-    _routingExample?.updateHighlightedRouteSections();
+    eventBus.fire(StopCompletedEvent());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FloatingActionButton(
-              onPressed: () => _mockStopComplete(),
-              child: Icon(Icons.check_circle),
-            ),
-            Visibility(
-              visible: _routingExample == null
-                  ? false
-                  : _routingExample!.isLookingAround,
-              child: FloatingActionButton(
-                backgroundColor: Colors.green,
-                child: const Icon(Icons.center_focus_strong),
-                onPressed: () => {
-                  changeIsLookingAround(false),
-                  _routingExample?.flyTo(_routingExample!.lastPosition)
-                },
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              FloatingActionButton(
+                onPressed: () => _mockStopComplete(),
+                child: Icon(Icons.check_circle),
               ),
-            ),
-            Padding(padding: EdgeInsets.all(5)),
-            FloatingActionButton(
-              onPressed: () => _zoomOut(),
-              child: Icon(Icons.zoom_out),
-            ),
-            Padding(padding: EdgeInsets.all(2)),
-            FloatingActionButton(
-              onPressed: () => _zoomIn(),
-              child: Icon(Icons.zoom_in),
-            )
-          ],
+              Visibility(
+                visible: _routingExample == null
+                    ? false
+                    : _routingExample!.isLookingAround,
+                child: FloatingActionButton(
+                  backgroundColor: Colors.green,
+                  child: const Icon(Icons.center_focus_strong),
+                  onPressed: () => {
+                    changeIsLookingAround(false),
+                    _routingExample?.flyTo(_routingExample!.lastPosition)
+                  },
+                ),
+              ),
+              Padding(padding: EdgeInsets.all(5)),
+              FloatingActionButton(
+                onPressed: () => _zoomOut(),
+                child: Icon(Icons.zoom_out),
+              ),
+              Padding(padding: EdgeInsets.all(2)),
+              FloatingActionButton(
+                onPressed: () => _zoomIn(),
+                child: Icon(Icons.zoom_in),
+              )
+            ],
+          ),
         ),
-      ),
-      body: Stack(
+        body: Column(
+          children: [
+            _createNextDropInfoWidget(),
+            Container(
+              decoration: BoxDecoration(color: Colors.black),
+              height: 2,
+            ),
+            Expanded(child: HereMap(onMapCreated: _onMapCreated)),
+          ],
+        ));
+  }
+
+  Widget _createNextDropInfoWidget() {
+    if (_routingExample == null) return Padding(padding: EdgeInsets.all(0));
+
+    return Container(
+      decoration: BoxDecoration(color: Colors.white),
+      height: 80,
+      child: Column(
         children: [
-          HereMap(onMapCreated: _onMapCreated),
+          SizedBox(
+            height: 10,
+          ),
+          Container(
+            height: 50,
+            padding: EdgeInsets.only(left: 10, right: 10),
+            child: Row(
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: '[' +
+                            _routingExample!.activeTask.firstParcelNumber
+                                .toString() +
+                            ' - ' +
+                            _routingExample!.activeTask.lastParcelNumber
+                                .toString() +
+                            '',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 25,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' ' +
+                            (_routingExample!.activeTask.lastParcelNumber -
+                                    _routingExample!
+                                        .activeTask.firstParcelNumber +
+                                    1)
+                                .toString(),
+                        style: TextStyle(
+                          color: Color.fromARGB(150, 0, 0, 0),
+                          fontSize: 12,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ']',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(padding: EdgeInsets.all(5)),
+                Expanded(
+                  child: Text(
+                    _routingExample!.activeTask.fullAddress,
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 0, 0, 0),
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 20,
+            padding: EdgeInsets.only(left: 10, right: 10),
+            child: Row(children: [
+              Text(_routingExample!.activeTask.deliveryTimeBlock)
+            ]),
+          ),
         ],
       ),
     );
@@ -142,9 +232,9 @@ class _NavigationPageState extends State<NavigationPage> {
         (MapError? error) {
       if (error == null) {
         _routingExample = RoutingExample(hereMapController);
-        routeProvider
-            .getRoute(0)
-            .then((value) => _routingExample?.addRoute(value));
+        routeProvider.getRoute(0).then((value) {
+          _routingExample?.addRoute(value);
+        });
       } else {
         print("Map scene not loaded. MapError: " + error.toString());
       }
@@ -154,11 +244,11 @@ class _NavigationPageState extends State<NavigationPage> {
   @override
   void dispose() {
     // Free HERE SDK resources before the application shuts down.
-    SDKNativeEngine.sharedInstance?.dispose();
-    SdkContext.release();
+    //SDKNativeEngine.sharedInstance?.dispose();
+    //SdkContext.release();
     panGestureEvent?.cancel();
-
-    _routingExample?.timer?.cancel();
+    taskLoadedEvent?.cancel();
+    _routingExample?.destroy();
     super.dispose();
   }
 }

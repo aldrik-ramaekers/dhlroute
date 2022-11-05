@@ -17,6 +17,8 @@ import 'package:here_sdk/routing.dart';
 import 'package:image/image.dart' as image;
 import 'package:here_sdk/routing.dart' as here;
 import 'package:training_planner/events/MapPanningEvent.dart';
+import 'package:training_planner/events/NextStopLoadedEvent.dart';
+import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/pages/navigation_page.dart';
 import 'route.dart' as DHLRoute;
 
@@ -25,12 +27,45 @@ import 'main.dart';
 // A callback to notify the hosting widget.
 typedef ShowDialogFunction = void Function(String title, String message);
 
+class DestinationPin {
+  final String text;
+  final GeoCoordinates? coords;
+  WidgetPin? pin;
+
+  DestinationPin({this.text = '', this.coords});
+}
+
+class ActiveTask {
+  final int firstParcelNumber;
+  final String deliveryTimeBlock;
+  final int lastParcelNumber;
+  final String fullAddress;
+  final bool needsSignature;
+  final bool notAtNeighbors;
+
+  ActiveTask(
+      this.firstParcelNumber,
+      this.deliveryTimeBlock,
+      this.lastParcelNumber,
+      this.fullAddress,
+      this.needsSignature,
+      this.notAtNeighbors);
+}
+
 class RoutingExample {
   Timer? timer;
   bool isLookingAround = false;
   double currentZoom = 20;
   HereMapController hereMapController;
+  StreamSubscription? stopCompletedEvent;
+
   List<MapPolyline> _routeSections = [];
+  List<MapPolyline> _pathSections = [];
+  List<DestinationPin> _parcelNumberPins = [];
+  List<GeoCoordinates> _destinationCoords = [];
+  List<ActiveTask> allTasks = [];
+  late ActiveTask activeTask;
+
   int routeSectionCursor = 0;
 
   late DHLRoute.Route _route;
@@ -40,6 +75,8 @@ class RoutingExample {
 
   RoutingExample(HereMapController _hereMapController)
       : hereMapController = _hereMapController {
+    activeTask = ActiveTask(0, "", 0, "", false, false);
+
     try {
       _routingEngine = RoutingEngine();
     } on InstantiationException {
@@ -65,6 +102,21 @@ class RoutingExample {
       isLookingAround = true;
       eventBus.fire(MapPanningEvent(true));
     });
+
+    stopCompletedEvent = eventBus.on<StopCompletedEvent>().listen((e) {
+      routeSectionCursor += 1;
+      if (routeSectionCursor >= allTasks.length) {
+        routeSectionCursor = allTasks.length - 1;
+      }
+      activeTask = allTasks[routeSectionCursor];
+      updateHighlightedRouteSections();
+      eventBus.fire(NextStopLoadedEvent());
+    });
+  }
+
+  void destroy() {
+    stopCompletedEvent?.cancel();
+    timer?.cancel();
   }
 
   void _updateLocation(Position value) {
@@ -129,9 +181,20 @@ class RoutingExample {
   }
 
   void showAnchoredMapViewPin(GeoCoordinates coords, String text) {
-    var widgetPin = hereMapController.pinWidget(
-        _createWidget(text, Color.fromARGB(200, 0, 144, 138)), coords);
-    widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
+    _parcelNumberPins.add(DestinationPin(text: text, coords: coords));
+  }
+
+  DHLRoute.Task _findTaskWithLowestSequenceNumberInGroup(
+      DHLRoute.Route route, List<String> groupPids) {
+    List<DHLRoute.Task> tasksFound = [];
+
+    for (final item in route.tasks!) {
+      if (groupPids.contains(item.pid)) tasksFound.add(item);
+    }
+
+    tasksFound.sort((e1, e2) => int.parse(e1.deliverySequenceNumber!)
+        .compareTo(int.parse(e2.deliverySequenceNumber!)));
+    return tasksFound.first;
   }
 
   Future<void> addRoute(DHLRoute.Route route) async {
@@ -145,23 +208,54 @@ class RoutingExample {
 
     List<Waypoint> waypoints = [Waypoint.withDefaults(routeStartCoords)];
 
-    GeoCoordinates previousCoords = routeStartCoords;
+    bool isFirst = true;
     for (final item in route.tasks!) {
       var destinationGeoCoordinates = GeoCoordinates(
           double.parse(item.addressLatitude!),
           double.parse(item.addressLongitude!));
 
-      if (item.groupFirst == 'false') continue;
+      if (item.isIntervention != 'true' &&
+          item.groupSize != null &&
+          item.groupPids != null &&
+          int.parse(item.groupSize!) > 1) {
+        var firstTaskInGroup =
+            _findTaskWithLowestSequenceNumberInGroup(route, item.groupPids!);
+        if (firstTaskInGroup != item) {
+          continue;
+        }
+      }
 
       waypoints.add(Waypoint.withDefaults(destinationGeoCoordinates));
-      showAnchoredMapViewPin(
-          destinationGeoCoordinates, item.deliverySequenceNumber.toString());
 
-      previousCoords = destinationGeoCoordinates;
+      _parcelNumberPins.add(DestinationPin(
+          text: item.deliverySequenceNumber.toString(),
+          coords: destinationGeoCoordinates));
+      _destinationCoords.add(destinationGeoCoordinates);
+      debugPrint(item.deliverySequenceNumber);
+
+      int sequenceNumber = int.parse(item.deliverySequenceNumber!);
+      int groupLastSequenceNumber = int.parse(item.deliverySequenceNumber!);
+      if (item.groupSize != null) {
+        groupLastSequenceNumber += int.parse(item.groupSize!) - 1;
+      }
+      var groupedTask = ActiveTask(
+          sequenceNumber,
+          item.timeframe!,
+          groupLastSequenceNumber,
+          item.fullAddressForNavigation!,
+          item.indicationSignatureRequired == true,
+          item.indicationNotAtNeighbours == true);
+
+      if (isFirst) {
+        activeTask = groupedTask;
+        isFirst = false;
+      }
+      allTasks.add(groupedTask);
     }
 
     PedestrianOptions f = PedestrianOptions.withDefaults();
     f.routeOptions.alternatives = 0;
+    f.routeOptions.enableTrafficOptimization = false;
     f.routeOptions.optimizationMode = OptimizationMode.fastest;
 
     _routingEngine.calculatePedestrianRoute(waypoints, f,
@@ -181,6 +275,8 @@ class RoutingExample {
         var error = routingError.toString();
       }
     });
+
+    eventBus.fire(NextStopLoadedEvent());
   }
 
   _showLineToHouse(Section section, GeoCoordinates houseCoords) {
@@ -192,7 +288,7 @@ class RoutingExample {
         MapPolyline(walkLine, 8, Color.fromARGB(160, 255, 20, 20));
     hereMapController.mapScene.addMapPolyline(walkPathPolyline);
 
-    //_routeSections.add(walkPathPolyline);
+    _pathSections.add(walkPathPolyline);
   }
 
   _showRouteOnMap(here.Route route) {
@@ -211,13 +307,43 @@ class RoutingExample {
   }
 
   void updateHighlightedRouteSections() {
+    // Show the next 20 parcel pins, to let the delivery driver decide on possible detours.
+    int maxPins = 20;
+    for (int i = 0; i < _parcelNumberPins.length; i++) {
+      DestinationPin pin = _parcelNumberPins.elementAt(i);
+
+      if (i > routeSectionCursor && i < routeSectionCursor + maxPins) {
+        if (pin.pin != null) continue;
+        var widgetPin = hereMapController.pinWidget(
+            _createWidget(pin.text, Color.fromARGB(200, 0, 144, 138)),
+            _destinationCoords[i]);
+        widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
+        pin.pin = widgetPin;
+      } else {
+        pin.pin?.unpin();
+        pin.pin = null;
+      }
+
+      // Highlight current destination.
+      if (i == routeSectionCursor) {
+        var widgetPin = hereMapController.pinWidget(
+            _createWidget(pin.text, ui.Color.fromARGB(199, 143, 8, 31)),
+            _destinationCoords[i]);
+        widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
+        pin.pin = widgetPin;
+      }
+    }
+
+    // Show the next 5 sections as to not clutter the screen.
+    int maxSections = 5;
     for (int i = 0; i < _routeSections.length; i++) {
       MapPolyline section = _routeSections.elementAt(i);
-      int maxSections = 5;
+      MapPolyline path = _pathSections.elementAt(i);
 
       // previous section
       if (i == routeSectionCursor - 1) {
         section.lineColor = Color.fromARGB(160, 168, 113, 108);
+        path.lineColor = Color.fromARGB(0, 255, 255, 255);
       }
       // current and next 5 sections
       else if (i >= routeSectionCursor &&
@@ -228,8 +354,10 @@ class RoutingExample {
             0,
             144,
             138);
+        path.lineColor = Color.fromARGB(160, 255, 0, 0);
       } else {
         section.lineColor = Color.fromARGB(0, 255, 255, 255);
+        path.lineColor = Color.fromARGB(0, 255, 255, 255);
       }
     }
   }

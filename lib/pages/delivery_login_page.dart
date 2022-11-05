@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:training_planner/events/RouteLoadedEvent.dart';
 import 'package:training_planner/pages/agenda_page.dart';
 import 'package:training_planner/pages/developer_page.dart';
 import 'package:training_planner/pages/logbook_page.dart';
@@ -23,6 +24,9 @@ class _DeliveryLoginPageState extends State<DeliveryLoginPage> {
   @override
   initState() {
     super.initState();
+
+    pnumberController.text = remoteAuthService.storedPNumber;
+    daycodeController.text = remoteAuthService.storedDaycode;
   }
 
   _attemptLogin() async {

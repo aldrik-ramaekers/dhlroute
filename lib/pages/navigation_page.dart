@@ -9,6 +9,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/RoutingExample.dart';
 import 'package:training_planner/events/MapPanningEvent.dart';
 import 'package:training_planner/events/NextStopLoadedEvent.dart';
+import 'package:training_planner/events/RouteLoadedEvent.dart';
 import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/shift.dart';
@@ -142,9 +143,21 @@ class _NavigationPageState extends State<NavigationPage> {
               decoration: BoxDecoration(color: Colors.black),
               height: 2,
             ),
-            Expanded(child: HereMap(onMapCreated: _onMapCreated)),
+            Expanded(
+              child: Stack(
+                children: [HereMap(onMapCreated: _onMapCreated)],
+              ),
+            ),
           ],
         ));
+  }
+
+  Widget getLoadingScreen() {
+    return LoadingAnimationWidget.flickr(
+      leftDotColor: Style.titleColor,
+      rightDotColor: Style.background,
+      size: MediaQuery.of(context).size.width / 4,
+    );
   }
 
   Widget _createNextDropInfoWidget() {
@@ -227,13 +240,15 @@ class _NavigationPageState extends State<NavigationPage> {
     );
   }
 
-  void _onMapCreated(HereMapController hereMapController) {
+  void _onMapCreated(HereMapController hereMapController) async {
     hereMapController.mapScene.loadSceneForMapScheme(MapScheme.normalDay,
         (MapError? error) {
       if (error == null) {
         _routingExample = RoutingExample(hereMapController);
         routeProvider.getRoute(0).then((value) {
-          _routingExample?.addRoute(value);
+          _routingExample?.addRoute(value).then((value) {
+            eventBus.fire(RouteLoadedEvent(page: widget));
+          });
         });
       } else {
         print("Map scene not loaded. MapError: " + error.toString());

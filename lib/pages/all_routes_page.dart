@@ -4,7 +4,8 @@ import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/main.dart';
 import 'package:training_planner/models/route_list.dart';
-import 'package:training_planner/route.dart';
+import 'package:training_planner/pages/navigation_page.dart';
+import 'package:training_planner/route.dart' as DHLRoute;
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
 import 'package:training_planner/utils/date.dart';
@@ -29,7 +30,26 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
         setState(() => {routeInfo = value});
       });
     } catch (e) {
-      debugPrint(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Route lijst kan niet worden geladen')));
+    }
+  }
+
+  _startRoute(String tripkey) async {
+    try {
+      DHLRoute.Route? route = await apiService.getRoute(tripkey);
+
+      if (route == null) {
+        throw new Exception();
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NavigationPage(route: route)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Route kan niet worden geladen')));
     }
   }
 
@@ -41,7 +61,8 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
         padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
         child: Container(
           decoration: BoxDecoration(
-              color: Style.background,
+              color: Color.fromARGB(40, 0, 0, 0),
+              border: Border.all(color: Color.fromARGB(160, 0, 0, 0)),
               borderRadius: BorderRadius.all(Radius.circular(4))),
           child: Padding(
             padding: const EdgeInsets.all(8),
@@ -62,8 +83,10 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
                     padding: EdgeInsets.all(0),
                   ),
                 ),
-                OutlinedButton(
-                  onPressed: () {},
+                ElevatedButton(
+                  onPressed: () {
+                    _startRoute(route.tripKey!);
+                  },
                   child: Text('Bekijk'),
                 ),
               ],
@@ -121,6 +144,11 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Werkschema'),
+        backgroundColor: Style.background,
+        foregroundColor: Style.titleColor,
+      ),
       body: Container(
         color: Colors.white,
         child: ShaderMask(

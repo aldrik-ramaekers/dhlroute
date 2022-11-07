@@ -28,8 +28,8 @@ class _DeliveryLoginPageState extends State<DeliveryLoginPage> {
   initState() {
     super.initState();
 
-    pnumberController.text = remoteAuthService.storedPNumber;
-    daycodeController.text = remoteAuthService.storedDaycode;
+    pnumberController.text = '639174';
+    daycodeController.text = '424';
     versionController.text = "1.12.3-prod";
   }
 

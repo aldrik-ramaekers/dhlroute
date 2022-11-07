@@ -231,7 +231,6 @@ class RoutingExample {
           text: item.deliverySequenceNumber.toString(),
           coords: destinationGeoCoordinates));
       _destinationCoords.add(destinationGeoCoordinates);
-      debugPrint(item.deliverySequenceNumber);
 
       int sequenceNumber = int.parse(item.deliverySequenceNumber!);
       int groupLastSequenceNumber = int.parse(item.deliverySequenceNumber!);

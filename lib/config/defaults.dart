@@ -1,4 +1,4 @@
-String program_version = '0.4';
+String program_version = '0.5';
 bool debug_output = false;
 
 class ShiftType {

@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:training_planner/route.dart' as DHLRoute;
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -25,8 +25,9 @@ import 'package:here_sdk/mapview.dart';
 class NavigationPage extends StatefulWidget {
   @override
   _NavigationPageState createState() => _NavigationPageState();
+  final DHLRoute.Route route;
 
-  const NavigationPage({Key? key}) : super(key: key);
+  const NavigationPage({Key? key, required this.route}) : super(key: key);
 }
 
 class _NavigationPageState extends State<NavigationPage> {
@@ -245,10 +246,8 @@ class _NavigationPageState extends State<NavigationPage> {
         (MapError? error) {
       if (error == null) {
         _routingExample = RoutingExample(hereMapController);
-        routeProvider.getRoute(0).then((value) {
-          _routingExample?.addRoute(value).then((value) {
-            eventBus.fire(RouteLoadedEvent(page: widget));
-          });
+        _routingExample?.addRoute(widget.route).then((value) {
+          eventBus.fire(RouteLoadedEvent(page: widget));
         });
       } else {
         print("Map scene not loaded. MapError: " + error.toString());

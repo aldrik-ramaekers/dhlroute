@@ -6,4 +6,5 @@ import 'package:training_planner/route.dart';
 abstract class IStoregearApiService {
   Future<LoginResponse> login(LoginRequest req);
   Future<RouteList> getRoutes();
+  Future<Route?> getRoute(String tripkey);
 }

@@ -23,10 +23,14 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
   @override
   initState() {
     super.initState();
-    debugPrint('XDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD!!!');
-    apiService.getRoutes().then((value) => {
-          setState(() => {routeInfo = value})
-        });
+
+    try {
+      apiService.getRoutes().then((value) {
+        setState(() => {routeInfo = value});
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   List<Widget> createRoutesDataWidgets() {
@@ -37,18 +41,30 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
         padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
         child: Container(
           decoration: BoxDecoration(
-              border: Border.all(color: Style.logbookEntryBorder),
-              color: Style.logbookEntryBackground,
-              borderRadius: BorderRadius.all(Radius.circular(8))),
+              color: Style.background,
+              borderRadius: BorderRadius.all(Radius.circular(4))),
           child: Padding(
             padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text(
-                  route.tripNumber.toString(),
+                  'Route ' + route.tripNumber.toString(),
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(0),
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: () {},
+                  child: Text('Bekijk'),
                 ),
               ],
             ),
@@ -64,7 +80,7 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
     var monthDataWidgets = createRoutesDataWidgets();
     if (monthDataWidgets.isEmpty) {
       return Center(
-        child: Text('Geen data beschikbaar'),
+        child: Text('Geen routes beschikbaar'),
       );
     }
 
@@ -104,27 +120,32 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (Rect rect) {
-        return LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Style.background,
-            Colors.transparent,
-            Colors.transparent,
-            Style.background
-          ],
-          stops: [
-            0.0,
-            0.05,
-            0.95,
-            1.0
-          ], // 10% purple, 80% transparent, 10% purple
-        ).createShader(rect);
-      },
-      blendMode: BlendMode.dstOut,
-      child: getLoadingScreenOrDataList(),
+    return Scaffold(
+      body: Container(
+        color: Colors.white,
+        child: ShaderMask(
+          shaderCallback: (Rect rect) {
+            return LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Style.background,
+                Colors.transparent,
+                Colors.transparent,
+                Style.background
+              ],
+              stops: [
+                0.0,
+                0.05,
+                0.95,
+                1.0
+              ], // 10% purple, 80% transparent, 10% purple
+            ).createShader(rect);
+          },
+          blendMode: BlendMode.dstOut,
+          child: getLoadingScreenOrDataList(),
+        ),
+      ),
     );
   }
 }

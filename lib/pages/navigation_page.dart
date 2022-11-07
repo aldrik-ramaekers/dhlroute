@@ -221,7 +221,7 @@ class _NavigationPageState extends State<NavigationPage> {
                     _routingExample!.activeTask.fullAddress,
                     style: TextStyle(
                       color: Color.fromARGB(255, 0, 0, 0),
-                      fontSize: 18,
+                      fontSize: 15,
                     ),
                   ),
                 ),

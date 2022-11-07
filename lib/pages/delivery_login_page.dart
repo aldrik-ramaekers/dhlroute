@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:training_planner/events/RouteLoadedEvent.dart';
+import 'package:training_planner/models/login_request.dart';
+import 'package:training_planner/models/login_response.dart';
 import 'package:training_planner/pages/agenda_page.dart';
+import 'package:training_planner/pages/all_routes_page.dart';
 import 'package:training_planner/pages/developer_page.dart';
 import 'package:training_planner/pages/logbook_page.dart';
 import 'package:training_planner/pages/navigation_page.dart';
@@ -20,23 +23,33 @@ class DeliveryLoginPage extends StatefulWidget {
 class _DeliveryLoginPageState extends State<DeliveryLoginPage> {
   final pnumberController = TextEditingController();
   final daycodeController = TextEditingController();
-
+  final versionController = TextEditingController();
   @override
   initState() {
     super.initState();
 
     pnumberController.text = remoteAuthService.storedPNumber;
     daycodeController.text = remoteAuthService.storedDaycode;
+    versionController.text = "1.12.3-prod";
   }
 
   _attemptLogin() async {
-    bool success = await remoteAuthService.authenticate(
-        pnumberController.text, daycodeController.text);
-    if (success) {
+    try {
+      LoginResponse res = await apiService.login(LoginRequest(
+          username: pnumberController.text,
+          password: daycodeController.text,
+          pdaSoftwareVersion: versionController.text,
+          deviceImei: "990010902435339",
+          deviceName: "Sussyamongus A11",
+          deviceIdentifier: "990010902435339"));
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => NavigationPage()),
+        MaterialPageRoute(builder: (context) => AllRoutesPage()),
       );
+    } catch (e) {
+      debugPrint(e.toString());
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Gegevens kloppen niet')));
     }
   }
 
@@ -64,6 +77,15 @@ class _DeliveryLoginPageState extends State<DeliveryLoginPage> {
                 decoration: InputDecoration(labelText: "dagcode"),
                 keyboardType: TextInputType.number,
                 controller: daycodeController,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+                ],
+              ),
+              Padding(padding: EdgeInsets.all(10)),
+              TextField(
+                decoration: InputDecoration(labelText: "Versie"),
+                keyboardType: TextInputType.number,
+                controller: versionController,
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.digitsOnly
                 ],

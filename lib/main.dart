@@ -8,12 +8,14 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:training_planner/services/authentication_service.dart';
 import 'package:training_planner/services/iroute_provider_service.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
+import 'package:training_planner/services/istoregear_api_service.dart';
 import 'package:training_planner/services/log_service.dart';
 import 'package:training_planner/services/messaging_service.dart';
 import 'package:training_planner/services/mock_route_provider_service.dart';
 import 'package:training_planner/services/mock_shift_provider_service.dart';
 import 'package:training_planner/services/local_shift_provider_service.dart';
 import 'package:training_planner/services/settings_service.dart';
+import 'package:training_planner/services/storegear_api_service.dart';
 import 'package:training_planner/style/style.dart';
 import 'pages/home_page.dart';
 import 'package:local_auth/local_auth.dart';
@@ -57,6 +59,8 @@ final LocalAuthentication localAuthService = LocalAuthentication();
 final AuthenticationService remoteAuthService = AuthenticationService();
 final MessagingService messageService = MessagingService();
 final SettingsService settingsService = SettingsService();
+final IStoregearApiService apiService = StoregearApiService();
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 

@@ -110,6 +110,7 @@ class StoregearApiService extends IStoregearApiService {
     }
   }
 
+  @override
   Future<DHLRoute.Route?> getRoute(String tripkey) async {
     //return MockRouteProviderService().getRoute(int.parse(tripkey));
 
@@ -126,7 +127,7 @@ class StoregearApiService extends IStoregearApiService {
       if (content["message"] != null) {
         return null;
       }
-      return DHLRoute.Route.fromJson(content);
+      return RouteInfo.fromJson(content).route;
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.

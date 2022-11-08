@@ -210,6 +210,13 @@ class RoutingExample {
 
     bool isFirst = true;
     for (final item in route.tasks!) {
+      debugPrint(item.deliverySequenceNumber.toString());
+
+      if (item.addressLatitude == null || item.addressLongitude == null) {
+        // Skip adressen die fout zijn ingegeven.
+        continue;
+      }
+
       var destinationGeoCoordinates = GeoCoordinates(
           double.parse(item.addressLatitude!),
           double.parse(item.addressLongitude!));

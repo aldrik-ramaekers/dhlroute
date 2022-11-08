@@ -40,7 +40,7 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
       DHLRoute.Route? route = await apiService.getRoute(tripkey);
 
       if (route == null) {
-        throw new Exception();
+        throw Exception();
       }
 
       Navigator.push(

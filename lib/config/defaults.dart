@@ -1,5 +1,5 @@
-String program_version = '0.5';
-bool debug_output = false;
+String program_version = '0.8';
+bool debug_output = true;
 
 class ShiftType {
   String name;

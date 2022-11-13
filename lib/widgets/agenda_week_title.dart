@@ -6,19 +6,27 @@ class AgendaWeekTitle extends StatefulWidget {
   final int weekNr;
   final DateTime mondayOfWeek;
   final bool isCurrentWeek;
+  final Duration hoursWorked;
 
-  const AgendaWeekTitle({
-    Key? key,
-    required this.weekNr,
-    required this.mondayOfWeek,
-    required this.isCurrentWeek,
-  }) : super(key: key);
+  const AgendaWeekTitle(
+      {Key? key,
+      required this.weekNr,
+      required this.mondayOfWeek,
+      required this.isCurrentWeek,
+      required this.hoursWorked})
+      : super(key: key);
 
   @override
   _AgendaWeekTitleState createState() => _AgendaWeekTitleState();
 }
 
 class _AgendaWeekTitleState extends State<AgendaWeekTitle> {
+  String _printDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    return "${twoDigits(duration.inHours)}h ${twoDigitMinutes}m";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(children: [
@@ -38,7 +46,9 @@ class _AgendaWeekTitleState extends State<AgendaWeekTitle> {
                       " " +
                       DateHelper.getMonthName(this.widget.mondayOfWeek.month) +
                       " " +
-                      this.widget.mondayOfWeek.year.toString(),
+                      this.widget.mondayOfWeek.year.toString() +
+                      " | " +
+                      _printDuration(widget.hoursWorked),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   )),

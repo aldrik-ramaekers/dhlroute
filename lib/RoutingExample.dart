@@ -72,6 +72,21 @@ class RoutingExample {
   late RoutingEngine _routingEngine;
   late GeoCoordinates lastPosition = GeoCoordinates(0, 0);
   late SearchOptions _searchOptions;
+  late MapMarker mapMarker;
+
+  Future<Uint8List> _loadFileAsUint8List(String assetPathToFile) async {
+    // The path refers to the assets directory as specified in pubspec.yaml.
+    ByteData fileData = await rootBundle.load(assetPathToFile);
+    return Uint8List.view(fileData.buffer);
+  }
+
+  Future<void> _addCircle(GeoCoordinates geoCoordinates) async {
+    Uint8List imagePixelData = await _loadFileAsUint8List('assets/package.png');
+    MapImage circleMapImage =
+        MapImage.withPixelDataAndImageFormat(imagePixelData, ImageFormat.png);
+    mapMarker = MapMarker(geoCoordinates, circleMapImage);
+    hereMapController.mapScene.addMapMarker(mapMarker);
+  }
 
   RoutingExample(HereMapController _hereMapController)
       : hereMapController = _hereMapController {
@@ -93,6 +108,8 @@ class RoutingExample {
     _hereMapController.camera
         .lookAtPoint(GeoCoordinates(50.8434572, 5.7381166));
     _hereMapController.camera.zoomTo(currentZoom);
+
+    _addCircle(GeoCoordinates(50.8434572, 5.7381166));
 
     timer =
         Timer.periodic(Duration(seconds: 1), (Timer t) => _setLocationOnMap());
@@ -121,6 +138,7 @@ class RoutingExample {
 
   void _updateLocation(Position value) {
     lastPosition = GeoCoordinates(value.latitude, value.longitude);
+    mapMarker.coordinates = lastPosition;
     flyTo(GeoCoordinates(value.latitude, value.longitude));
   }
 
@@ -168,13 +186,13 @@ class RoutingExample {
       padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: backgroundColor,
-        shape: BoxShape.circle,
+        shape: BoxShape.rectangle,
         border: Border.all(color: Color.fromARGB(0, 0, 0, 120)),
       ),
       child: GestureDetector(
         child: Text(
           label,
-          style: TextStyle(fontSize: 10.0),
+          style: TextStyle(fontSize: 20.0),
         ),
       ),
     );
@@ -235,7 +253,12 @@ class RoutingExample {
       waypoints.add(Waypoint.withDefaults(destinationGeoCoordinates));
 
       _parcelNumberPins.add(DestinationPin(
-          text: item.deliverySequenceNumber.toString(),
+          text: item.deliverySequenceNumber.toString() +
+              ' = ' +
+              item.houseNumber! +
+              (item.houseNumberAddition != null
+                  ? item.houseNumberAddition!
+                  : ''),
           coords: destinationGeoCoordinates));
       _destinationCoords.add(destinationGeoCoordinates);
 
@@ -314,11 +337,11 @@ class RoutingExample {
 
   void updateHighlightedRouteSections() {
     // Show the next 20 parcel pins, to let the delivery driver decide on possible detours.
-    int maxPins = 20;
+    int maxPins = 300;
     for (int i = 0; i < _parcelNumberPins.length; i++) {
       DestinationPin pin = _parcelNumberPins.elementAt(i);
 
-      if (i > routeSectionCursor && i < routeSectionCursor + maxPins) {
+      if (i > routeSectionCursor + 1 && i < routeSectionCursor + maxPins) {
         if (pin.pin != null) continue;
         var widgetPin = hereMapController.pinWidget(
             _createWidget(pin.text, Color.fromARGB(200, 0, 144, 138)),
@@ -334,6 +357,14 @@ class RoutingExample {
       if (i == routeSectionCursor) {
         var widgetPin = hereMapController.pinWidget(
             _createWidget(pin.text, ui.Color.fromARGB(199, 143, 8, 31)),
+            _destinationCoords[i]);
+        widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
+        pin.pin = widgetPin;
+      }
+
+      if (i == routeSectionCursor + 1) {
+        var widgetPin = hereMapController.pinWidget(
+            _createWidget(pin.text, ui.Color.fromARGB(197, 13, 36, 241)),
             _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
         pin.pin = widgetPin;

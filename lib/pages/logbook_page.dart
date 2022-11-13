@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/main.dart';
+import 'package:training_planner/services/local_salary_provider_service.dart';
+import 'package:training_planner/services/log_service.dart';
 import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
 import 'package:training_planner/utils/date.dart';
@@ -21,6 +25,7 @@ class MonthData {
   List<Shift> shifts;
   Duration totalWorkedTime = Duration();
   double expectedSalary = 0;
+  double actualSalary = 0;
 
   void calculateData() {
     totalWorkedTime = Duration();
@@ -34,10 +39,16 @@ class MonthData {
   MonthData({required this.firstDayOfMonth, required this.shifts}) {
     calculateData();
   }
+
+  double calculateHourlyRate() {
+    if (totalWorkedTime.inMinutes == 0) return 0;
+    return actualSalary / (totalWorkedTime.inMinutes / 60.0);
+  }
 }
 
 class _LogbookPageState extends State<LogbookPage> {
   List<MonthData>? months;
+  List<IncomeData>? income;
 
   void updateMonthData(MonthData month, Shift shift) {
     month.shifts.add(shift);
@@ -71,55 +82,100 @@ class _LogbookPageState extends State<LogbookPage> {
   initState() {
     super.initState();
 
-    shiftProvider.getPastShifts().then(
-          (value) => {
-            if (mounted)
-              setState(
-                () {
-                  List<Shift> allShifts = value;
-                  sortShifts(allShifts);
-                },
-              )
+    shiftProvider.getPastShifts().then((value) async {
+      income = await incomeProvider.getSavedIncome();
+      if (mounted) {
+        setState(
+          () {
+            List<Shift> allShifts = value;
+            sortShifts(allShifts);
           },
         );
+      }
+    });
   }
 
   List<Widget> createMonthDataWidgets() {
     List<Widget> result = [];
 
     for (var month in months!) {
-      result.add(Padding(
-        padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
-        child: Container(
-          decoration: BoxDecoration(
-              border: Border.all(color: Style.logbookEntryBorder),
-              color: Style.logbookEntryBackground,
-              borderRadius: BorderRadius.all(Radius.circular(8))),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateHelper.getMonthName(month.firstDayOfMonth.month) +
-                      ' ' +
-                      month.firstDayOfMonth.year.toString(),
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                Padding(padding: EdgeInsets.only(left: 5, bottom: 5, right: 5)),
-                Text('Gewerkt: ' +
-                    month.totalWorkedTime.inHours.toString() +
-                    ' uur'),
-                Text('Verdiend: €' +
-                    month.expectedSalary.toStringAsFixed(2) +
-                    ' (schatting)'),
-                Padding(padding: EdgeInsets.only(left: 5, bottom: 5, right: 5)),
-              ],
+      for (var inc in income!) {
+        if (inc.firstDayOfMonth == month.firstDayOfMonth) {
+          month.actualSalary = inc.income;
+          break;
+        }
+      }
+
+      result.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
+          child: Container(
+            decoration: BoxDecoration(
+                border: Border.all(color: Style.logbookEntryBorder),
+                color: Style.logbookEntryBackground,
+                borderRadius: BorderRadius.all(Radius.circular(4))),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        DateHelper.getMonthName(month.firstDayOfMonth.month) +
+                            ' ' +
+                            month.firstDayOfMonth.year.toString(),
+                        style: TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      Padding(
+                          padding:
+                              EdgeInsets.only(left: 5, bottom: 5, right: 5)),
+                      Text('Gewerkt: ' +
+                          month.totalWorkedTime.inHours.toString() +
+                          ' uur'),
+                      Text('Verwacht: €' +
+                          month.expectedSalary.toStringAsFixed(2)),
+                      Padding(
+                          padding:
+                              EdgeInsets.only(left: 5, bottom: 5, right: 5)),
+                    ],
+                  ),
+                  Padding(padding: EdgeInsets.all(10)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '',
+                        style: TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      Padding(
+                          padding:
+                              EdgeInsets.only(left: 5, bottom: 5, right: 5)),
+                      Text('Per uur: ' +
+                          month.calculateHourlyRate().toStringAsFixed(2) +
+                          ' uur'),
+                      Text('Verdiend: €' +
+                          month.actualSalary.toStringAsFixed(2)),
+                      Padding(
+                          padding:
+                              EdgeInsets.only(left: 5, bottom: 5, right: 5)),
+                    ],
+                  ),
+                  Expanded(
+                    child: Text(''),
+                  ),
+                  OutlinedButton(
+                    child: Icon(Icons.edit),
+                    onPressed: () => {requestMonthInfo(month)},
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ));
+      );
     }
 
     return result;
@@ -159,6 +215,21 @@ class _LogbookPageState extends State<LogbookPage> {
     );
   }
 
+  Widget getData() {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/logbookbg.jpg'),
+          fit: BoxFit.cover,
+          opacity: 0.3,
+        ),
+      ),
+      child: getLoadingScreenOrDataList(),
+    );
+  }
+
   Widget getLoadingScreenOrDataList() {
     if (months != null) {
       return getDataList();
@@ -189,7 +260,59 @@ class _LogbookPageState extends State<LogbookPage> {
         ).createShader(rect);
       },
       blendMode: BlendMode.dstOut,
-      child: getLoadingScreenOrDataList(),
+      child: getData(),
+    );
+  }
+
+  Future requestMonthInfo(MonthData month) async {
+    TextEditingController controller = TextEditingController();
+    controller.text = month.actualSalary.toString();
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Terug"),
+      onPressed: () {
+        Navigator.pop(context);
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Opslaan"),
+      onPressed: () async {
+        month.actualSalary = double.parse(controller.text);
+        for (var m in months!) {
+          if (m.firstDayOfMonth == month.firstDayOfMonth) {
+            m.actualSalary = double.parse(controller.text);
+          }
+        }
+        await incomeProvider.writeSavedIncome(months!);
+
+        setState(() {});
+        Navigator.pop(context);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Inkomen invullen"),
+      actions: [
+        TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Inkomen',
+          ),
+          keyboardType: TextInputType.number,
+        ),
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 }

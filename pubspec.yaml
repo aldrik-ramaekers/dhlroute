@@ -75,6 +75,13 @@ flutter:
     - assets/sleep.png
     - assets/celebration.png
     - assets/package.png
+    - assets/logbookbg.jpg
+
+    - assets/goals/1.png
+    - assets/goals/2.jpg
+    - assets/goals/3.jpeg
+    - assets/goals/4.jpg
+    - assets/goals/5.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

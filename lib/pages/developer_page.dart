@@ -57,6 +57,7 @@ class _DeveloperPageState extends State<DeveloperPage> {
           child: Column(
             children: [
               Text('Versie ' + program_version),
+              /*
               TextButton(
                   onPressed: () {
                     if (canUseLocalAuth) {
@@ -73,6 +74,7 @@ class _DeveloperPageState extends State<DeveloperPage> {
                     }
                   },
                   child: Text('Bestanden verwijderen')),
+                  */
             ],
           ),
         ),

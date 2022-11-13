@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
@@ -35,14 +37,21 @@ class _AgendaWeekState extends State<AgendaWeek> {
       weekItems = null;
     });
 
-    var data = await shiftProvider.getShiftsForWeek(this.widget.mondayOfWeek);
+    var data = await shiftProvider.getShiftsForWeek(widget.mondayOfWeek);
     if (!mounted) return;
     setState(() {
+      Duration hoursWorked = Duration();
+      for (var item in data) {
+        hoursWorked += item.getElapsedSessionTime();
+      }
+
       weekItems = [
         AgendaWeekTitle(
-            weekNr: this.widget.weekNr,
-            mondayOfWeek: this.widget.mondayOfWeek,
-            isCurrentWeek: this.widget.isCurrentWeek),
+          weekNr: widget.weekNr,
+          mondayOfWeek: widget.mondayOfWeek,
+          isCurrentWeek: widget.isCurrentWeek,
+          hoursWorked: hoursWorked,
+        ),
         Padding(
           padding: const EdgeInsets.all(10),
         )
@@ -66,13 +75,22 @@ class _AgendaWeekState extends State<AgendaWeek> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    for (var item in getBackgrounds()) {
+      precacheImage(AssetImage('assets/goals/' + item), context);
+    }
+  }
+
+  @override
   void initState() {
-    super.initState();
     updateItems();
 
     eventbusSubscription = eventBus.on<RefreshWeekEvent>().listen((event) {
       updateItems();
     });
+    super.initState();
   }
 
   @override
@@ -107,9 +125,11 @@ class _AgendaWeekState extends State<AgendaWeek> {
           padding: const EdgeInsets.all(10),
         ),
         AgendaWeekTitle(
-            weekNr: this.widget.weekNr,
-            mondayOfWeek: this.widget.mondayOfWeek,
-            isCurrentWeek: this.widget.isCurrentWeek),
+          weekNr: widget.weekNr,
+          mondayOfWeek: widget.mondayOfWeek,
+          isCurrentWeek: widget.isCurrentWeek,
+          hoursWorked: Duration(),
+        ),
         Padding(
           padding: const EdgeInsets.all(10),
         ),
@@ -119,6 +139,29 @@ class _AgendaWeekState extends State<AgendaWeek> {
           size: MediaQuery.of(context).size.width / 4,
         )
       ],
+    );
+  }
+
+  List<String> getBackgrounds() {
+    return ['1.png', '2.jpg', '3.jpeg', '4.jpg', '5.jpg'];
+  }
+
+  String getBackgroundImage() {
+    var options = getBackgrounds();
+    int nrToChoose = widget.weekNr % options.length;
+    return options[nrToChoose];
+  }
+
+  Widget getData() {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/goals/' + getBackgroundImage()),
+          fit: BoxFit.cover,
+          opacity: 0.3,
+        ),
+      ),
+      child: getLoadingScreenOrDataList(),
     );
   }
 
@@ -152,7 +195,7 @@ class _AgendaWeekState extends State<AgendaWeek> {
         ).createShader(rect);
       },
       blendMode: BlendMode.dstOut,
-      child: getLoadingScreenOrDataList(),
+      child: getData(),
     );
   }
 }

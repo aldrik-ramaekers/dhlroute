@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:training_planner/services/iroute_provider_service.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
 import 'package:training_planner/services/istoregear_api_service.dart';
+import 'package:training_planner/services/local_salary_provider_service.dart';
 import 'package:training_planner/services/log_service.dart';
 import 'package:training_planner/services/messaging_service.dart';
 import 'package:training_planner/services/mock_route_provider_service.dart';
@@ -58,6 +59,7 @@ final LocalAuthentication localAuthService = LocalAuthentication();
 final MessagingService messageService = MessagingService();
 final SettingsService settingsService = SettingsService();
 final IStoregearApiService apiService = StoregearApiService();
+final LocalSalaryProviderService incomeProvider = LocalSalaryProviderService();
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();

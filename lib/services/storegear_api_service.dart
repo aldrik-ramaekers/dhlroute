@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:training_planner/config/defaults.dart';
 import 'package:training_planner/models/login_request.dart';
 import 'package:training_planner/models/login_response.dart';
 import 'package:training_planner/models/route_list.dart';
@@ -14,7 +15,9 @@ class StoregearApiService extends IStoregearApiService {
 
   @override
   Future<LoginResponse> login(LoginRequest req) async {
-    //return LoginResponse();
+    if (debug_mode) {
+      return LoginResponse();
+    }
 
     final response = await http.post(
         Uri.parse('http://dhlapis.com/delivery/v1/users/login?env_type=PROD'),
@@ -90,7 +93,9 @@ class StoregearApiService extends IStoregearApiService {
 
   @override
   Future<RouteList> getRoutes() async {
-    //return _getMockRouteList();
+    if (debug_mode) {
+      return _getMockRouteList();
+    }
 
     final response = await http.get(
         Uri.parse('http://dhlapis.com/delivery/v1/routes'),
@@ -114,7 +119,9 @@ class StoregearApiService extends IStoregearApiService {
 
   @override
   Future<DHLRoute.Route?> getRoute(String tripkey) async {
-    //return MockRouteProviderService().getRoute(int.parse(tripkey));
+    if (debug_mode) {
+      return MockRouteProviderService().getRoute(int.parse(tripkey));
+    }
 
     final response = await http.get(
         Uri.parse(

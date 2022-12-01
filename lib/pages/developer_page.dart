@@ -43,6 +43,12 @@ class _DeveloperPageState extends State<DeveloperPage> {
     }
   }
 
+  _toggleDebugMode() {
+    setState(() {
+      debug_mode = !debug_mode;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,6 +63,9 @@ class _DeveloperPageState extends State<DeveloperPage> {
           child: Column(
             children: [
               Text('Versie ' + program_version),
+              ElevatedButton(
+                  onPressed: _toggleDebugMode,
+                  child: Text('Test Modus: ' + debug_mode.toString()))
               /*
               TextButton(
                   onPressed: () {

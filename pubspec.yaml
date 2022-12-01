@@ -47,6 +47,8 @@ dependencies:
   geolocator: ^9.0.2
   image: ^3.2.2
   http: ^0.13.5
+  auto_orientation: ^2.2.1
+  wakelock: ^0.6.2
 
 dev_dependencies:
   flutter_test:

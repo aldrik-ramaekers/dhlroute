@@ -153,9 +153,8 @@ class _LogbookPageState extends State<LogbookPage> {
                       Padding(
                           padding:
                               EdgeInsets.only(left: 5, bottom: 5, right: 5)),
-                      Text('Per uur: ' +
-                          month.calculateHourlyRate().toStringAsFixed(2) +
-                          ' uur'),
+                      Text('Per uur: €' +
+                          month.calculateHourlyRate().toStringAsFixed(2)),
                       Text('Verdiend: €' +
                           month.actualSalary.toStringAsFixed(2)),
                       Padding(

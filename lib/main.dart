@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:auto_orientation/auto_orientation.dart';
 import 'package:event_bus/event_bus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:training_planner/services/iroute_provider_service.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
@@ -24,9 +26,11 @@ import 'package:here_sdk/core.engine.dart';
 import 'package:here_sdk/core.errors.dart';
 import 'package:here_sdk/mapview.dart';
 
-void main() {
+Future<void> main() async {
   _initializeHERESDK();
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   configureNotifications();
   runZonedGuarded(() {
     runApp(const MyApp());

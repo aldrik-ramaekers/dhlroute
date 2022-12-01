@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:auto_orientation/auto_orientation.dart';
+import 'package:flutter/services.dart';
 import 'package:training_planner/route.dart' as DHLRoute;
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ import 'package:here_sdk/core.dart';
 import 'package:here_sdk/core.engine.dart';
 import 'package:here_sdk/core.errors.dart';
 import 'package:here_sdk/mapview.dart';
+import 'package:wakelock/wakelock.dart';
 
 class NavigationPage extends StatefulWidget {
   @override
@@ -68,6 +71,10 @@ class _NavigationPageState extends State<NavigationPage> {
   @override
   initState() {
     super.initState();
+
+    SystemChrome.setEnabledSystemUIOverlays([]);
+    Wakelock.enable();
+    AutoOrientation.portraitDownMode();
 
     _handleLocationPermission();
 
@@ -263,6 +270,10 @@ class _NavigationPageState extends State<NavigationPage> {
     panGestureEvent?.cancel();
     taskLoadedEvent?.cancel();
     _routingExample?.destroy();
+    Wakelock.disable();
+    AutoOrientation.portraitUpMode();
+    SystemChrome.setEnabledSystemUIOverlays(
+        [SystemUiOverlay.top, SystemUiOverlay.bottom]);
     super.dispose();
   }
 }

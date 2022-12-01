@@ -31,8 +31,10 @@ class DestinationPin {
   final String text;
   final GeoCoordinates? coords;
   WidgetPin? pin;
+  bool isDoublePlannedAddress;
 
-  DestinationPin({this.text = '', this.coords});
+  DestinationPin(
+      {this.text = '', this.coords, required this.isDoublePlannedAddress});
 }
 
 class ActiveTask {
@@ -181,13 +183,18 @@ class RoutingExample {
         MapMeasure(MapMeasureKind.zoomLevel, currentZoom));
   }
 
-  Widget _createWidget(String label, Color backgroundColor) {
+  Widget _createWidget(String label, Color backgroundColor,
+      {bool isDoublePlannedAddress = false}) {
     return Container(
       padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: backgroundColor,
         shape: BoxShape.rectangle,
-        border: Border.all(color: Color.fromARGB(0, 0, 0, 120)),
+        border: Border.all(
+            color: isDoublePlannedAddress
+                ? ui.Color.fromARGB(255, 255, 0, 0)
+                : ui.Color.fromARGB(0, 0, 0, 0),
+            width: 2),
       ),
       child: GestureDetector(
         child: Text(
@@ -196,10 +203,6 @@ class RoutingExample {
         ),
       ),
     );
-  }
-
-  void showAnchoredMapViewPin(GeoCoordinates coords, String text) {
-    _parcelNumberPins.add(DestinationPin(text: text, coords: coords));
   }
 
   DHLRoute.Task _findTaskWithLowestSequenceNumberInGroup(
@@ -213,6 +216,15 @@ class RoutingExample {
     tasksFound.sort((e1, e2) => int.parse(e1.deliverySequenceNumber!)
         .compareTo(int.parse(e2.deliverySequenceNumber!)));
     return tasksFound.first;
+  }
+
+  bool isAddressDoublePlanned(DestinationPin taskToCheck) {
+    for (final item in _parcelNumberPins) {
+      if (item == taskToCheck) continue;
+      if (item.coords == taskToCheck.coords) return true;
+    }
+
+    return false;
   }
 
   Future<void> addRoute(DHLRoute.Route route) async {
@@ -252,14 +264,17 @@ class RoutingExample {
 
       waypoints.add(Waypoint.withDefaults(destinationGeoCoordinates));
 
-      _parcelNumberPins.add(DestinationPin(
-          text: item.deliverySequenceNumber.toString() +
-              ' = ' +
-              item.houseNumber! +
-              (item.houseNumberAddition != null
-                  ? item.houseNumberAddition!
-                  : ''),
-          coords: destinationGeoCoordinates));
+      _parcelNumberPins.add(
+        DestinationPin(
+            text: item.deliverySequenceNumber.toString() +
+                ' = ' +
+                item.houseNumber! +
+                (item.houseNumberAddition != null
+                    ? item.houseNumberAddition!
+                    : ''),
+            coords: destinationGeoCoordinates,
+            isDoublePlannedAddress: false),
+      );
       _destinationCoords.add(destinationGeoCoordinates);
 
       int sequenceNumber = int.parse(item.deliverySequenceNumber!);
@@ -280,6 +295,10 @@ class RoutingExample {
         isFirst = false;
       }
       allTasks.add(groupedTask);
+    }
+
+    for (var item in _parcelNumberPins) {
+      item.isDoublePlannedAddress = isAddressDoublePlanned(item);
     }
 
     PedestrianOptions f = PedestrianOptions.withDefaults();
@@ -338,13 +357,14 @@ class RoutingExample {
   void updateHighlightedRouteSections() {
     // Show the next 20 parcel pins, to let the delivery driver decide on possible detours.
     int maxPins = 300;
-    for (int i = 0; i < _parcelNumberPins.length; i++) {
+    for (int i = _parcelNumberPins.length - 1; i >= 0; i--) {
       DestinationPin pin = _parcelNumberPins.elementAt(i);
 
       if (i > routeSectionCursor + 1 && i < routeSectionCursor + maxPins) {
         if (pin.pin != null) continue;
         var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, Color.fromARGB(200, 0, 144, 138)),
+            _createWidget(pin.text, Color.fromARGB(200, 0, 144, 138),
+                isDoublePlannedAddress: pin.isDoublePlannedAddress),
             _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
         pin.pin = widgetPin;
@@ -356,7 +376,8 @@ class RoutingExample {
       // Highlight current destination.
       if (i == routeSectionCursor) {
         var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, ui.Color.fromARGB(199, 143, 8, 31)),
+            _createWidget(pin.text, ui.Color.fromARGB(199, 143, 8, 31),
+                isDoublePlannedAddress: pin.isDoublePlannedAddress),
             _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
         pin.pin = widgetPin;
@@ -364,7 +385,8 @@ class RoutingExample {
 
       if (i == routeSectionCursor + 1) {
         var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, ui.Color.fromARGB(197, 13, 36, 241)),
+            _createWidget(pin.text, ui.Color.fromARGB(197, 13, 36, 241),
+                isDoublePlannedAddress: pin.isDoublePlannedAddress),
             _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
         pin.pin = widgetPin;
@@ -373,7 +395,7 @@ class RoutingExample {
 
     // Show the next 5 sections as to not clutter the screen.
     int maxSections = 5;
-    for (int i = 0; i < _routeSections.length; i++) {
+    for (int i = _routeSections.length - 1; i >= 0; i--) {
       MapPolyline section = _routeSections.elementAt(i);
       MapPolyline path = _pathSections.elementAt(i);
 

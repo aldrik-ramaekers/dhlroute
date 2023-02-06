@@ -30,7 +30,13 @@ class _DeliveryLoginPageState extends State<DeliveryLoginPage> {
 
     pnumberController.text = '639174';
     daycodeController.text = '424';
-    versionController.text = "1.12.3-prod";
+    versionController.text = "..";
+
+    settingsService.readSettingsFromFile().then((value) => {
+      setState(() => {
+        versionController.text = value.version
+      })
+    });
   }
 
   _attemptLogin() async {
@@ -84,11 +90,8 @@ class _DeliveryLoginPageState extends State<DeliveryLoginPage> {
               Padding(padding: EdgeInsets.all(10)),
               TextField(
                 decoration: InputDecoration(labelText: "Versie"),
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.text,
                 controller: versionController,
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
-                ],
               ),
               Padding(padding: EdgeInsets.all(10)),
               OutlinedButton(

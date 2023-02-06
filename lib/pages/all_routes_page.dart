@@ -27,6 +27,7 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
 
     try {
       apiService.getRoutes().then((value) {
+        debugPrint('xddd 2');
         setState(() => {routeInfo = value});
       });
     } catch (e) {

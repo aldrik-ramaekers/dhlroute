@@ -38,56 +38,7 @@ class StoregearApiService extends IStoregearApiService {
 
   _getMockRouteList() {
     return RouteList.fromJson(jsonDecode('''
-{
-    "routes": [
-        {
-            "timeframe_key": "96870",
-            "trip_key": "18996870",
-            "trip_number": "9",
-            "trip_pda_status": "5",
-            "trip_pda_status_description": "Rit overgedragen",
-            "trip_sequence_number": "1",
-            "number_in_trip": "139",
-            "plate": "VND-37-B",
-            "damage_registration": true,
-            "eva": "11:11",
-            "trip_date": "4/11/2022",
-            "first_address_lat": "50.8996568140536",
-            "first_address_lng": "5.75238472757395",
-            "started": "true",
-            "all_tasks_finished": "false",
-            "start_km": "24704",
-            "end_km": null,
-            "tasks_enriched": "true",
-            "in_trip_scan_finished": "true",
-            "eva_added": "true",
-            "trip_start_request_sent": "true"
-        },
-        {
-            "timeframe_key": "96870",
-            "trip_key": "18996871",
-            "trip_number": "10",
-            "trip_pda_status": "5",
-            "trip_pda_status_description": "Rit overgedragen",
-            "trip_sequence_number": "1",
-            "number_in_trip": "139",
-            "plate": "VND-37-B",
-            "damage_registration": true,
-            "eva": "11:11",
-            "trip_date": "4/11/2022",
-            "first_address_lat": "50.8996568140536",
-            "first_address_lng": "5.75238472757395",
-            "started": "true",
-            "all_tasks_finished": "false",
-            "start_km": "24704",
-            "end_km": null,
-            "tasks_enriched": "true",
-            "in_trip_scan_finished": "true",
-            "eva_added": "true",
-            "trip_start_request_sent": "true"
-        }
-    ]
-}
+{ "routes": [ { "timeframe_key": "62395", "trip_key": "19762395", "trip_number": "1", "trip_pda_status": "5", "trip_pda_status_description": "Rit overgedragen", "trip_sequence_number": "1", "number_in_trip": "2", "plate": "VTG-69-R", "damage_registration": true, "eva": "09:04", "trip_date": "6/2/2023", "first_address_lat": "50.9182446706206", "first_address_lng": "5.79150644329668", "started": "true", "all_tasks_finished": "true", "start_km": "458", "end_km": "511", "tasks_enriched": "true", "in_trip_scan_finished": "true", "eva_added": "true", "trip_start_request_sent": "true" }, { "timeframe_key": "62410", "trip_key": "19762410", "trip_number": "10", "trip_pda_status": "5", "trip_pda_status_description": "Rit overgedragen", "trip_sequence_number": "1", "number_in_trip": "120", "plate": "VTG-69-R", "damage_registration": true, "eva": "11:04", "trip_date": "6/2/2023", "first_address_lat": "50.8987460739383", "first_address_lng": "5.73347116865626", "started": "true", "all_tasks_finished": "false", "start_km": "511", "end_km": null, "tasks_enriched": "true", "in_trip_scan_finished": "true", "eva_added": "true", "trip_start_request_sent": "true" } ] }
 '''));
   }
 
@@ -104,6 +55,8 @@ class StoregearApiService extends IStoregearApiService {
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
+
+      
 
       var content = jsonDecode(response.body);
       if (content["message"] != null) {

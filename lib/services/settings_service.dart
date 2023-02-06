@@ -6,27 +6,30 @@ import 'package:training_planner/services/log_service.dart';
 
 class Settings {
   double salary;
+  String version;
 
-  Settings({required this.salary});
+  Settings({required this.salary, required this.version});
 
   Settings.fromJson(Map<String, dynamic> json)
-      : salary = double.parse(json['salary']);
+      : salary = double.parse(json['salary']), version = json['version'];
 
   Map<String, dynamic> toJson() {
     return {
       'salary': salary.toStringAsFixed(2),
+      'version': version,
     };
   }
 }
 
 class DefaultSettings extends Settings {
-  DefaultSettings() : super(salary: 13.75);
+  DefaultSettings() : super(salary: 13.75, version: '1.13.7-prod');
 
   DefaultSettings.fromJson(Map<String, dynamic> json) : super.fromJson(json);
 
   Map<String, dynamic> toJson() {
     return {
       'salary': salary.toStringAsFixed(2),
+      'version': version,
     };
   }
 }

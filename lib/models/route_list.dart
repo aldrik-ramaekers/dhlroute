@@ -38,7 +38,7 @@ class RouteData {
   String? started;
   String? allTasksFinished;
   String? startKm;
-  Null? endKm;
+  String? endKm;
   String? tasksEnriched;
   String? inTripScanFinished;
   String? evaAdded;

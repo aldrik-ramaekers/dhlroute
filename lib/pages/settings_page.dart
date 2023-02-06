@@ -13,9 +13,13 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final versionController = TextEditingController();
+
   @override
   initState() {
     super.initState();
+
+    versionController.text = widget.settings.version;
   }
 
   Future<void> saveSettings() async {
@@ -44,6 +48,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 decoration: InputDecoration(
                   labelText: 'Huidige uurloon',
                 ),
+              ),
+               TextField(
+                decoration: InputDecoration(labelText: "Versie"),
+                keyboardType: TextInputType.text,
+                controller: versionController,
+                onChanged: ((value) => {
+                  widget.settings.version = value
+                }),
               ),
               Padding(padding: const EdgeInsets.all(0)),
               TextButton(

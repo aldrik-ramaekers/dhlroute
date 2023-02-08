@@ -20,6 +20,7 @@ import 'package:training_planner/events/MapPanningEvent.dart';
 import 'package:training_planner/events/NextStopLoadedEvent.dart';
 import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/pages/navigation_page.dart';
+import 'package:training_planner/services/iblacklist_provider_service.dart';
 import 'route.dart' as DHLRoute;
 
 import 'main.dart';
@@ -30,11 +31,19 @@ typedef ShowDialogFunction = void Function(String title, String message);
 class DestinationPin {
   final String text;
   final GeoCoordinates? coords;
+  final String? postalcodeNumeric;
+  final String? postalcodeAlpha;
+  final String? houseNumberWithExtra;
   WidgetPin? pin;
   bool isDoublePlannedAddress;
 
   DestinationPin(
-      {this.text = '', this.coords, required this.isDoublePlannedAddress});
+      {this.text = '',
+      this.coords,
+      required this.isDoublePlannedAddress,
+      required this.postalcodeNumeric,
+      required this.postalcodeAlpha,
+      required this.houseNumberWithExtra});
 }
 
 class ActiveTask {
@@ -75,6 +84,8 @@ class RoutingExample {
   late GeoCoordinates lastPosition = GeoCoordinates(0, 0);
   late SearchOptions _searchOptions;
   late MapMarker mapMarker;
+
+  List<BlacklistEntry> blacklist = [];
 
   Future<Uint8List> _loadFileAsUint8List(String assetPathToFile) async {
     // The path refers to the assets directory as specified in pubspec.yaml.
@@ -131,6 +142,8 @@ class RoutingExample {
       updateHighlightedRouteSections();
       eventBus.fire(NextStopLoadedEvent());
     });
+
+    blacklistProvider.getBlacklist().then((value) => {blacklist = value});
   }
 
   void destroy() {
@@ -189,6 +202,7 @@ class RoutingExample {
       padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: backgroundColor,
+        borderRadius: BorderRadius.circular(10),
         shape: BoxShape.rectangle,
         border: Border.all(
             color: isDoublePlannedAddress
@@ -273,7 +287,11 @@ class RoutingExample {
                     ? item.houseNumberAddition!
                     : ''),
             coords: destinationGeoCoordinates,
-            isDoublePlannedAddress: false),
+            isDoublePlannedAddress: false,
+            postalcodeNumeric: item.postalCodeNumeric,
+            postalcodeAlpha: item.postalCodeAlpha,
+            houseNumberWithExtra:
+                item.houseNumber! + (item.houseNumberAddition ?? '')),
       );
       _destinationCoords.add(destinationGeoCoordinates);
 
@@ -354,6 +372,24 @@ class RoutingExample {
     }
   }
 
+  bool destinationPinIsInBlacklist(DestinationPin pin) {
+    try {
+      for (int i = 0; i < blacklist.length; i++) {
+        if (pin.postalcodeNumeric == blacklist[i].postalcodeNumeric &&
+            pin.postalcodeAlpha!.toLowerCase() ==
+                blacklist[i].postalcodeAplha &&
+            pin.houseNumberWithExtra!.toLowerCase() ==
+                (blacklist[i].houseNumber.toString() +
+                    blacklist[i].houseNumberExtra.toLowerCase())) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   void updateHighlightedRouteSections() {
     // Show the next 20 parcel pins, to let the delivery driver decide on possible detours.
     int maxPins = 300;
@@ -386,6 +422,15 @@ class RoutingExample {
       if (i == routeSectionCursor + 1) {
         var widgetPin = hereMapController.pinWidget(
             _createWidget(pin.text, ui.Color.fromARGB(197, 13, 36, 241),
+                isDoublePlannedAddress: pin.isDoublePlannedAddress),
+            _destinationCoords[i]);
+        widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
+        pin.pin = widgetPin;
+      }
+
+      if (destinationPinIsInBlacklist(_parcelNumberPins[i])) {
+        var widgetPin = hereMapController.pinWidget(
+            _createWidget(pin.text, ui.Color.fromARGB(255, 255, 0, 234),
                 isDoublePlannedAddress: pin.isDoublePlannedAddress),
             _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);

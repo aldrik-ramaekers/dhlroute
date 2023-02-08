@@ -27,7 +27,6 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
 
     try {
       apiService.getRoutes().then((value) {
-        debugPrint('xddd 2');
         setState(() => {routeInfo = value});
       });
     } catch (e) {
@@ -62,7 +61,7 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
         padding: const EdgeInsets.only(bottom: 8, left: 10, right: 10),
         child: Container(
           decoration: BoxDecoration(
-              color: Color.fromARGB(40, 0, 0, 0),
+              color: Color.fromARGB(80, 0, 0, 0),
               border: Border.all(color: Color.fromARGB(160, 0, 0, 0)),
               borderRadius: BorderRadius.all(Radius.circular(4))),
           child: Padding(
@@ -71,13 +70,23 @@ class _AllRoutesPageState extends State<AllRoutesPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text(
-                  'Route ' + route.tripNumber.toString(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24),
+                Column(
+                  children: [
+                    Text(
+                      'Route ' + route.tripNumber.toString(),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24),
+                    ),
+                    Text(
+                      route.tripPdaStatusDescription ?? '',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w300,
+                          fontSize: 16),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: Padding(

@@ -7,9 +7,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:training_planner/services/iblacklist_provider_service.dart';
 import 'package:training_planner/services/iroute_provider_service.dart';
 import 'package:training_planner/services/ishift_provider_service.dart';
 import 'package:training_planner/services/istoregear_api_service.dart';
+import 'package:training_planner/services/local_blacklist_provider_service.dart';
 import 'package:training_planner/services/local_salary_provider_service.dart';
 import 'package:training_planner/services/log_service.dart';
 import 'package:training_planner/services/messaging_service.dart';
@@ -64,6 +66,8 @@ final MessagingService messageService = MessagingService();
 final SettingsService settingsService = SettingsService();
 final IStoregearApiService apiService = StoregearApiService();
 final LocalSalaryProviderService incomeProvider = LocalSalaryProviderService();
+final IBlacklistProviderService blacklistProvider =
+    LocalBlacklistProviderService();
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();

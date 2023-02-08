@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:training_planner/pages/agenda_page.dart';
+import 'package:training_planner/pages/blacklist_page.dart';
 import 'package:training_planner/pages/delivery_login_page.dart';
 import 'package:training_planner/pages/developer_page.dart';
 import 'package:training_planner/pages/logbook_page.dart';
@@ -84,6 +85,15 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => DeveloperPage()),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('Blacklist'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BlacklistPage()),
               );
             },
           ),

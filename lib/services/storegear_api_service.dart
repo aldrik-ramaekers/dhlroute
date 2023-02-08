@@ -56,8 +56,6 @@ class StoregearApiService extends IStoregearApiService {
       // If the server did return a 200 OK response,
       // then parse the JSON.
 
-      
-
       var content = jsonDecode(response.body);
       if (content["message"] != null) {
         return RouteList(routes: []);

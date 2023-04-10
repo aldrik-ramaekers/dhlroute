@@ -259,12 +259,15 @@ class RoutingExample {
   }
 
 // if address is double planned and there is a stop before this one.
-  bool shouldShowPinOnMap(DestinationPin taskToCheck) {
-    for (int i = _parcelNumberPins.length - 1; i >= 0; i--) {
+  bool shouldDoublePlannedAddressBeVisible(DestinationPin taskToCheck) {
+    if (!taskToCheck.isDoublePlannedAddress) return true;
+    for (int i = routeSectionCursor; i < _parcelNumberPins.length; i++) {
       var item = _parcelNumberPins[i];
-      if (!item.isDoublePlannedAddress) continue;
-      if (item == taskToCheck) return true;
-      if (item.coords == taskToCheck.coords && item == taskToCheck) {
+
+      if (item == taskToCheck) {
+        return true; // first one of the double planned addresses is visible.
+      }
+      if (item.coords == taskToCheck.coords) {
         return false;
       }
     }
@@ -446,7 +449,6 @@ class RoutingExample {
 
   void updateHighlightedRouteSections({bool force = false}) {
     int maxPins = 300;
-    print('cursor ' + routeSectionCursor.toString());
 
     for (int i = _parcelNumberPins.length - 1; i >= 0; i--) {
       DestinationPin pin = _parcelNumberPins.elementAt(i);
@@ -460,6 +462,12 @@ class RoutingExample {
 
       bool forceUpdateThisPin =
           force && (i > routeSectionCursor - 3 && i < routeSectionCursor + 3);
+
+      if (!shouldDoublePlannedAddressBeVisible(pin)) {
+        pin.pin?.unpin();
+        pin.pin = null;
+        continue;
+      }
 
       if (i > routeSectionCursor + 1 && i < routeSectionCursor + maxPins) {
         if (forceUpdateThisPin) {

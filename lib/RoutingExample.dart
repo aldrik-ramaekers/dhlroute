@@ -20,6 +20,7 @@ import 'package:here_sdk/routing.dart' as here;
 import 'package:training_planner/events/MapPanningEvent.dart';
 import 'package:training_planner/events/NextStopLoadedEvent.dart';
 import 'package:training_planner/events/StopCompletedEvent.dart';
+import 'package:training_planner/navigation/baseNavigation.dart';
 import 'package:training_planner/pages/navigation_page.dart';
 import 'package:training_planner/services/iblacklist_provider_service.dart';
 import 'route.dart' as DHLRoute;
@@ -28,43 +29,6 @@ import 'main.dart';
 
 // A callback to notify the hosting widget.
 typedef ShowDialogFunction = void Function(String title, String message);
-
-class DestinationPin {
-  final String text;
-  final int sequenceNumber;
-  final GeoCoordinates? coords;
-  final String? postalcodeNumeric;
-  final String? postalcodeAlpha;
-  final String? houseNumberWithExtra;
-  WidgetPin? pin;
-  bool isDoublePlannedAddress;
-
-  DestinationPin(
-      {this.text = '',
-      this.coords,
-      required this.sequenceNumber,
-      required this.isDoublePlannedAddress,
-      required this.postalcodeNumeric,
-      required this.postalcodeAlpha,
-      required this.houseNumberWithExtra});
-}
-
-class ActiveTask {
-  final int firstParcelNumber;
-  final String deliveryTimeBlock;
-  final int lastParcelNumber;
-  final String fullAddress;
-  final bool needsSignature;
-  final bool notAtNeighbors;
-
-  ActiveTask(
-      this.firstParcelNumber,
-      this.deliveryTimeBlock,
-      this.lastParcelNumber,
-      this.fullAddress,
-      this.needsSignature,
-      this.notAtNeighbors);
-}
 
 class RoutingExample {
   Timer? timer;
@@ -267,7 +231,7 @@ class RoutingExample {
       if (item == taskToCheck) {
         return true; // first one of the double planned addresses is visible.
       }
-      if (item.coords == taskToCheck.coords) {
+      if (item.coords.compare(taskToCheck.coords)) {
         return false;
       }
     }
@@ -278,23 +242,13 @@ class RoutingExample {
   bool isAddressDoublePlanned(DestinationPin taskToCheck) {
     for (final item in _parcelNumberPins) {
       if (item == taskToCheck) continue;
-      if (item.coords == taskToCheck.coords) return true;
+      if (item.coords.compare(taskToCheck.coords)) return true;
     }
 
     return false;
   }
 
-  Future<void> addRoute(DHLRoute.Route route) async {
-    if (route.tasks == null) return;
-    _route = route;
-
-    Position currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    GeoCoordinates routeStartCoords =
-        GeoCoordinates(currentPosition.latitude, currentPosition.longitude);
-
-    List<Waypoint> waypoints = [Waypoint.withDefaults(routeStartCoords)];
-
+  void groupTasksIntoGroups(DHLRoute.Route route) {
     bool isFirst = true;
     for (final item in route.tasks!) {
       //debugPrint(item.deliverySequenceNumber.toString());
@@ -320,8 +274,6 @@ class RoutingExample {
         }
       }
 
-      waypoints.add(Waypoint.withDefaults(destinationGeoCoordinates));
-
       _parcelNumberPins.add(
         DestinationPin(
             sequenceNumber: int.parse(item.deliverySequenceNumber!),
@@ -331,7 +283,8 @@ class RoutingExample {
                 (item.houseNumberAddition != null
                     ? item.houseNumberAddition!
                     : ''),
-            coords: destinationGeoCoordinates,
+            coords: DHLCoordinates(destinationGeoCoordinates.latitude,
+                destinationGeoCoordinates.longitude),
             isDoublePlannedAddress: false,
             postalcodeNumeric: item.postalCodeNumeric,
             postalcodeAlpha: item.postalCodeAlpha,
@@ -364,6 +317,25 @@ class RoutingExample {
         isFirst = false;
       }
       allTasks.add(groupedTask);
+    }
+  }
+
+  Future<void> addRoute(DHLRoute.Route route) async {
+    if (route.tasks == null) return;
+    _route = route;
+
+    Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    GeoCoordinates routeStartCoords =
+        GeoCoordinates(currentPosition.latitude, currentPosition.longitude);
+
+    List<Waypoint> waypoints = [Waypoint.withDefaults(routeStartCoords)];
+
+    groupTasksIntoGroups(route);
+
+    for (var item in _parcelNumberPins) {
+      waypoints.add(Waypoint.withDefaults(GeoCoordinates(
+          item.coords?.lattitude ?? 0, item.coords?.longitude ?? 0)));
     }
 
     for (var item in _parcelNumberPins) {

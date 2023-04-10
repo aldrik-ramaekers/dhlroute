@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:auto_orientation/auto_orientation.dart';
 import 'package:flutter/services.dart';
+import 'package:training_planner/navigation/HERENavigation.dart';
+import 'package:training_planner/navigation/baseNavigation.dart';
 import 'package:training_planner/route.dart' as DHLRoute;
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:here_sdk/mapview.dart';
-import 'package:in_date_utils/in_date_utils.dart' as DateUtilities;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:training_planner/RoutingExample.dart';
 import 'package:training_planner/events/MapPanningEvent.dart';
@@ -14,15 +15,7 @@ import 'package:training_planner/events/NextStopLoadedEvent.dart';
 import 'package:training_planner/events/RouteLoadedEvent.dart';
 import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/main.dart';
-import 'package:training_planner/shift.dart';
 import 'package:training_planner/style/style.dart';
-import 'package:training_planner/utils/date.dart';
-import 'package:training_planner/widgets/agenda_week.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:here_sdk/core.dart';
-import 'package:here_sdk/core.engine.dart';
-import 'package:here_sdk/core.errors.dart';
-import 'package:here_sdk/mapview.dart';
 import 'package:wakelock/wakelock.dart';
 
 class NavigationPage extends StatefulWidget {
@@ -34,7 +27,8 @@ class NavigationPage extends StatefulWidget {
 }
 
 class _NavigationPageState extends State<NavigationPage> {
-  RoutingExample? _routingExample;
+  //RoutingExample? _routingExample;
+  BaseNavigation? navigation;
   StreamSubscription? panGestureEvent;
   StreamSubscription? taskLoadedEvent;
   ActiveTask? activeTask = ActiveTask(1, "", 1, "", false, false);
@@ -91,16 +85,16 @@ class _NavigationPageState extends State<NavigationPage> {
 
   void changeIsLookingAround(bool val) {
     setState(() {
-      _routingExample?.isLookingAround = val;
+      navigation?.isLookingAround = val;
     });
   }
 
   void _zoomIn() {
-    _routingExample?.changeZoom(_routingExample!.currentZoom + 1);
+    eventBus.fire(ChangeZoomEvent(navigation!.currentZoom + 1));
   }
 
   void _zoomOut() {
-    _routingExample?.changeZoom(_routingExample!.currentZoom - 1);
+    eventBus.fire(ChangeZoomEvent(navigation!.currentZoom - 1));
   }
 
   void _mockStopComplete() {
@@ -113,6 +107,10 @@ class _NavigationPageState extends State<NavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (navigation == null) {
+      navigation = HERENavigation(route: widget.route);
+    }
+
     return Scaffold(
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: Padding(
@@ -129,15 +127,14 @@ class _NavigationPageState extends State<NavigationPage> {
                 ),
               ),
               Visibility(
-                visible: _routingExample == null
-                    ? false
-                    : _routingExample!.isLookingAround,
+                visible:
+                    navigation == null ? false : navigation!.isLookingAround,
                 child: FloatingActionButton(
                   backgroundColor: Colors.green,
                   child: const Icon(Icons.center_focus_strong),
                   onPressed: () => {
                     changeIsLookingAround(false),
-                    _routingExample?.flyTo(_routingExample!.lastPosition)
+                    eventBus.fire(FlyToEvent(navigation!.lastPosition))
                   },
                 ),
               ),
@@ -163,7 +160,7 @@ class _NavigationPageState extends State<NavigationPage> {
             ),
             Expanded(
               child: Stack(
-                children: [HereMap(onMapCreated: _onMapCreated)],
+                children: [navigation!],
               ),
             ),
           ],
@@ -179,7 +176,7 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   Widget _createNextDropInfoWidget() {
-    if (_routingExample == null) return Padding(padding: EdgeInsets.all(0));
+    if (navigation == null) return Padding(padding: EdgeInsets.all(0));
 
     return Container(
       decoration: BoxDecoration(color: Colors.white),
@@ -253,28 +250,10 @@ class _NavigationPageState extends State<NavigationPage> {
     );
   }
 
-  void _onMapCreated(HereMapController hereMapController) async {
-    hereMapController.mapScene.loadSceneForMapScheme(MapScheme.normalDay,
-        (MapError? error) {
-      if (error == null) {
-        _routingExample = RoutingExample(hereMapController);
-        _routingExample?.addRoute(widget.route).then((value) {
-          eventBus.fire(RouteLoadedEvent(page: widget));
-        });
-      } else {
-        print("Map scene not loaded. MapError: " + error.toString());
-      }
-    });
-  }
-
   @override
   void dispose() {
-    // Free HERE SDK resources before the application shuts down.
-    //SDKNativeEngine.sharedInstance?.dispose();
-    //SdkContext.release();
     panGestureEvent?.cancel();
     taskLoadedEvent?.cancel();
-    _routingExample?.destroy();
     Wakelock.disable();
     AutoOrientation.portraitUpMode();
     SystemChrome.setEnabledSystemUIOverlays(

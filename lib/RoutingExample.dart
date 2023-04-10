@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,7 @@ typedef ShowDialogFunction = void Function(String title, String message);
 
 class DestinationPin {
   final String text;
+  final int sequenceNumber;
   final GeoCoordinates? coords;
   final String? postalcodeNumeric;
   final String? postalcodeAlpha;
@@ -40,6 +42,7 @@ class DestinationPin {
   DestinationPin(
       {this.text = '',
       this.coords,
+      required this.sequenceNumber,
       required this.isDoublePlannedAddress,
       required this.postalcodeNumeric,
       required this.postalcodeAlpha,
@@ -69,13 +72,13 @@ class RoutingExample {
   double currentZoom = 20;
   HereMapController hereMapController;
   StreamSubscription? stopCompletedEvent;
+  StreamSubscription? stopIncompletedEvent;
 
   List<MapPolyline> _routeSections = [];
   List<MapPolyline> _pathSections = [];
   List<DestinationPin> _parcelNumberPins = [];
   List<GeoCoordinates> _destinationCoords = [];
   List<ActiveTask> allTasks = [];
-  late ActiveTask activeTask;
 
   int routeSectionCursor = 0;
 
@@ -103,8 +106,6 @@ class RoutingExample {
 
   RoutingExample(HereMapController _hereMapController)
       : hereMapController = _hereMapController {
-    activeTask = ActiveTask(0, "", 0, "", false, false);
-
     try {
       _routingEngine = RoutingEngine();
     } on InstantiationException {
@@ -138,9 +139,15 @@ class RoutingExample {
       if (routeSectionCursor >= allTasks.length) {
         routeSectionCursor = allTasks.length - 1;
       }
-      activeTask = allTasks[routeSectionCursor];
       updateHighlightedRouteSections();
-      eventBus.fire(NextStopLoadedEvent());
+      eventBus.fire(NextStopLoadedEvent(allTasks[routeSectionCursor]));
+    });
+
+    stopIncompletedEvent = eventBus.on<StopIncompletedEvent>().listen((e) {
+      routeSectionCursor -= 1;
+      if (routeSectionCursor < 0) routeSectionCursor = 0;
+      updateHighlightedRouteSections(force: true);
+      eventBus.fire(NextStopLoadedEvent(allTasks[routeSectionCursor]));
     });
 
     blacklistProvider.getBlacklist().then((value) => {blacklist = value});
@@ -148,6 +155,7 @@ class RoutingExample {
 
   void destroy() {
     stopCompletedEvent?.cancel();
+    stopIncompletedEvent?.cancel();
     timer?.cancel();
   }
 
@@ -196,10 +204,9 @@ class RoutingExample {
         MapMeasure(MapMeasureKind.zoomLevel, currentZoom));
   }
 
-  Widget _createWidget(String label, Color backgroundColor,
+  Widget _createWidget(DestinationPin pin, Color backgroundColor,
       {bool isDoublePlannedAddress = false}) {
     return Container(
-      padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(10),
@@ -211,11 +218,30 @@ class RoutingExample {
             width: 2),
       ),
       child: GestureDetector(
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 20.0),
-        ),
-      ),
+          child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 0, 0, 0),
+              borderRadius: BorderRadius.circular(10),
+              shape: BoxShape.rectangle,
+            ),
+            child: Text(
+              pin.sequenceNumber.toString(),
+              style: TextStyle(
+                  fontSize: 20.0, color: Color.fromARGB(255, 255, 255, 255)),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(3),
+            child: Text(
+              pin.houseNumberWithExtra ?? 'Zie pakket',
+              style: TextStyle(fontSize: 20.0),
+            ),
+          ),
+        ],
+      )),
     );
   }
 
@@ -230,6 +256,20 @@ class RoutingExample {
     tasksFound.sort((e1, e2) => int.parse(e1.deliverySequenceNumber!)
         .compareTo(int.parse(e2.deliverySequenceNumber!)));
     return tasksFound.first;
+  }
+
+// if address is double planned and there is a stop before this one.
+  bool shouldShowPinOnMap(DestinationPin taskToCheck) {
+    for (int i = _parcelNumberPins.length - 1; i >= 0; i--) {
+      var item = _parcelNumberPins[i];
+      if (!item.isDoublePlannedAddress) continue;
+      if (item == taskToCheck) return true;
+      if (item.coords == taskToCheck.coords && item == taskToCheck) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   bool isAddressDoublePlanned(DestinationPin taskToCheck) {
@@ -254,10 +294,11 @@ class RoutingExample {
 
     bool isFirst = true;
     for (final item in route.tasks!) {
-      debugPrint(item.deliverySequenceNumber.toString());
+      //debugPrint(item.deliverySequenceNumber.toString());
 
       if (item.addressLatitude == null || item.addressLongitude == null) {
         // Skip adressen die fout zijn ingegeven.
+        // Hier moeten we nog iets voor vinden om bestuurder te laten weten
         continue;
       }
 
@@ -280,6 +321,7 @@ class RoutingExample {
 
       _parcelNumberPins.add(
         DestinationPin(
+            sequenceNumber: int.parse(item.deliverySequenceNumber!),
             text: item.deliverySequenceNumber.toString() +
                 ' = ' +
                 item.houseNumber! +
@@ -300,16 +342,22 @@ class RoutingExample {
       if (item.groupSize != null) {
         groupLastSequenceNumber += int.parse(item.groupSize!) - 1;
       }
+
+      String addrToDisplay = (item.street ?? "").toUpperCase() +
+          " " +
+          (item.houseNumber ?? "") +
+          (item.houseNumberAddition ?? "");
+
       var groupedTask = ActiveTask(
           sequenceNumber,
           item.timeframe!,
           groupLastSequenceNumber,
-          item.fullAddressForNavigation!,
+          addrToDisplay,
           item.indicationSignatureRequired == true,
           item.indicationNotAtNeighbours == true);
 
       if (isFirst) {
-        activeTask = groupedTask;
+        eventBus.fire(NextStopLoadedEvent(groupedTask));
         isFirst = false;
       }
       allTasks.add(groupedTask);
@@ -341,8 +389,6 @@ class RoutingExample {
         var error = routingError.toString();
       }
     });
-
-    eventBus.fire(NextStopLoadedEvent());
   }
 
   _showLineToHouse(Section section, GeoCoordinates houseCoords) {
@@ -390,18 +436,39 @@ class RoutingExample {
     }
   }
 
-  void updateHighlightedRouteSections() {
-    // Show the next 20 parcel pins, to let the delivery driver decide on possible detours.
+  WidgetPin? createPinWidget(
+      DestinationPin pin, Color color, GeoCoordinates coords) {
+    return hereMapController.pinWidget(
+        _createWidget(pin, color,
+            isDoublePlannedAddress: pin.isDoublePlannedAddress),
+        coords);
+  }
+
+  void updateHighlightedRouteSections({bool force = false}) {
     int maxPins = 300;
+    print('cursor ' + routeSectionCursor.toString());
+
     for (int i = _parcelNumberPins.length - 1; i >= 0; i--) {
       DestinationPin pin = _parcelNumberPins.elementAt(i);
 
+      Color color = Color.fromARGB(200, 0, 144, 138);
+      if (i == routeSectionCursor) color = Color.fromARGB(199, 143, 8, 31);
+      if (i == routeSectionCursor + 1) color = Color.fromARGB(197, 13, 36, 241);
+      if (destinationPinIsInBlacklist(_parcelNumberPins[i])) {
+        color = ui.Color.fromRGBO(143, 8, 31, 0.78);
+      }
+
+      bool forceUpdateThisPin =
+          force && (i > routeSectionCursor - 3 && i < routeSectionCursor + 3);
+
       if (i > routeSectionCursor + 1 && i < routeSectionCursor + maxPins) {
-        if (pin.pin != null) continue;
-        var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, Color.fromARGB(200, 0, 144, 138),
-                isDoublePlannedAddress: pin.isDoublePlannedAddress),
-            _destinationCoords[i]);
+        if (forceUpdateThisPin) {
+          pin.pin?.unpin();
+          pin.pin = null;
+        } else if (pin.pin != null) {
+          continue;
+        }
+        var widgetPin = createPinWidget(pin, color, _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
         pin.pin = widgetPin;
       } else {
@@ -409,30 +476,8 @@ class RoutingExample {
         pin.pin = null;
       }
 
-      // Highlight current destination.
-      if (i == routeSectionCursor) {
-        var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, ui.Color.fromARGB(199, 143, 8, 31),
-                isDoublePlannedAddress: pin.isDoublePlannedAddress),
-            _destinationCoords[i]);
-        widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
-        pin.pin = widgetPin;
-      }
-
-      if (i == routeSectionCursor + 1) {
-        var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, ui.Color.fromARGB(197, 13, 36, 241),
-                isDoublePlannedAddress: pin.isDoublePlannedAddress),
-            _destinationCoords[i]);
-        widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
-        pin.pin = widgetPin;
-      }
-
-      if (destinationPinIsInBlacklist(_parcelNumberPins[i])) {
-        var widgetPin = hereMapController.pinWidget(
-            _createWidget(pin.text, ui.Color.fromARGB(255, 255, 0, 234),
-                isDoublePlannedAddress: pin.isDoublePlannedAddress),
-            _destinationCoords[i]);
+      if (i == routeSectionCursor || i == routeSectionCursor + 1) {
+        var widgetPin = createPinWidget(pin, color, _destinationCoords[i]);
         widgetPin?.anchor = Anchor2D.withHorizontalAndVertical(0.5, 0.5);
         pin.pin = widgetPin;
       }
@@ -440,6 +485,7 @@ class RoutingExample {
 
     // Show the next 5 sections as to not clutter the screen.
     int maxSections = 5;
+    int maxWalkPaths = 300;
     for (int i = _routeSections.length - 1; i >= 0; i--) {
       MapPolyline section = _routeSections.elementAt(i);
       MapPolyline path = _pathSections.elementAt(i);
@@ -458,9 +504,13 @@ class RoutingExample {
             0,
             144,
             138);
-        path.lineColor = Color.fromARGB(160, 255, 0, 0);
       } else {
         section.lineColor = Color.fromARGB(0, 255, 255, 255);
+      }
+
+      if (i >= routeSectionCursor && i < routeSectionCursor + maxWalkPaths) {
+        path.lineColor = Color.fromARGB(160, 255, 0, 0);
+      } else {
         path.lineColor = Color.fromARGB(0, 255, 255, 255);
       }
     }

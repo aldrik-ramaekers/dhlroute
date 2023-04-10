@@ -37,7 +37,7 @@ class _NavigationPageState extends State<NavigationPage> {
   RoutingExample? _routingExample;
   StreamSubscription? panGestureEvent;
   StreamSubscription? taskLoadedEvent;
-  ActiveTask? activeTask;
+  ActiveTask? activeTask = ActiveTask(1, "", 1, "", false, false);
 
   Future<bool> _handleLocationPermission() async {
     bool serviceEnabled;
@@ -83,7 +83,9 @@ class _NavigationPageState extends State<NavigationPage> {
     });
 
     taskLoadedEvent = eventBus.on<NextStopLoadedEvent>().listen((event) {
-      setState(() {});
+      setState(() {
+        activeTask = event.task;
+      });
     });
   }
 
@@ -105,6 +107,10 @@ class _NavigationPageState extends State<NavigationPage> {
     eventBus.fire(StopCompletedEvent());
   }
 
+  void _mockStopInComplete() {
+    eventBus.fire(StopIncompletedEvent());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,9 +120,13 @@ class _NavigationPageState extends State<NavigationPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              FloatingActionButton(
-                onPressed: () => _mockStopComplete(),
-                child: Icon(Icons.check_circle),
+              InkWell(
+                splashColor: Colors.blue,
+                onLongPress: () => _mockStopInComplete(),
+                child: FloatingActionButton(
+                  onPressed: () => _mockStopComplete(),
+                  child: Icon(Icons.check_circle),
+                ),
               ),
               Visibility(
                 visible: _routingExample == null
@@ -190,11 +200,9 @@ class _NavigationPageState extends State<NavigationPage> {
                     children: <TextSpan>[
                       TextSpan(
                         text: '[' +
-                            _routingExample!.activeTask.firstParcelNumber
-                                .toString() +
+                            activeTask!.firstParcelNumber.toString() +
                             ' - ' +
-                            _routingExample!.activeTask.lastParcelNumber
-                                .toString() +
+                            activeTask!.lastParcelNumber.toString() +
                             '',
                         style: TextStyle(
                           color: Color.fromARGB(255, 0, 0, 0),
@@ -203,9 +211,8 @@ class _NavigationPageState extends State<NavigationPage> {
                       ),
                       TextSpan(
                         text: ' ' +
-                            (_routingExample!.activeTask.lastParcelNumber -
-                                    _routingExample!
-                                        .activeTask.firstParcelNumber +
+                            (activeTask!.lastParcelNumber -
+                                    activeTask!.firstParcelNumber +
                                     1)
                                 .toString(),
                         style: TextStyle(
@@ -226,7 +233,7 @@ class _NavigationPageState extends State<NavigationPage> {
                 Padding(padding: EdgeInsets.all(5)),
                 Expanded(
                   child: Text(
-                    _routingExample!.activeTask.fullAddress,
+                    activeTask!.fullAddress,
                     style: TextStyle(
                       color: Color.fromARGB(255, 0, 0, 0),
                       fontSize: 15,
@@ -239,9 +246,7 @@ class _NavigationPageState extends State<NavigationPage> {
           Container(
             height: 20,
             padding: EdgeInsets.only(left: 10, right: 10),
-            child: Row(children: [
-              Text(_routingExample!.activeTask.deliveryTimeBlock)
-            ]),
+            child: Row(children: [Text(activeTask!.deliveryTimeBlock)]),
           ),
         ],
       ),

@@ -1,4 +1,4 @@
-String program_version = '0.13 [10/04/2023]';
+String program_version = '0.14 [13/04/2023]';
 bool debug_mode = false;
 
 class ShiftType {
@@ -19,7 +19,7 @@ class DefaultConfig {
         name: 'Dagrit',
         startTime: Duration(hours: 10),
         startTimeSaturday: Duration(hours: 10),
-        expectedDuration: Duration(hours: 6, minutes: 30)),
+        expectedDuration: Duration(hours: 7, minutes: 30)),
     ShiftType(
         name: 'Avondrit',
         startTime: Duration(hours: 17),

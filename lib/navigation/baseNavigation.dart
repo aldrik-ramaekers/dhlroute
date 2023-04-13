@@ -8,7 +8,7 @@ import '../route.dart' as DHLRoute;
 import 'package:training_planner/services/iblacklist_provider_service.dart';
 
 class DestinationPin {
-  final String text;
+  final int numberOfParcels;
   final int sequenceNumber;
   final DHLCoordinates coords;
   final String? postalcodeNumeric;
@@ -18,7 +18,7 @@ class DestinationPin {
   bool isDoublePlannedAddress;
 
   DestinationPin(
-      {this.text = '',
+      {required this.numberOfParcels,
       required this.coords,
       required this.sequenceNumber,
       required this.isDoublePlannedAddress,
@@ -45,6 +45,10 @@ class ActiveTask {
   final String fullAddress;
   final bool needsSignature;
   final bool notAtNeighbors;
+
+  int getNumberOfPercels() {
+    return lastParcelNumber - firstParcelNumber + 1;
+  }
 
   ActiveTask(
       this.firstParcelNumber,
@@ -120,10 +124,22 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
               borderRadius: BorderRadius.circular(10),
               shape: BoxShape.rectangle,
             ),
-            child: Text(
-              pin.sequenceNumber.toString(),
-              style: TextStyle(
-                  fontSize: 20.0, color: Color.fromARGB(255, 255, 255, 255)),
+            child: RichText(
+              text: TextSpan(children: [
+                TextSpan(
+                  text: pin.sequenceNumber.toString(),
+                  style: TextStyle(
+                      fontSize: 20.0,
+                      color: Color.fromARGB(255, 255, 255, 255)),
+                ),
+                if (pin.numberOfParcels > 1)
+                  TextSpan(
+                    text: ' ' + pin.numberOfParcels.toString(),
+                    style: TextStyle(
+                        fontSize: 12.0,
+                        color: Color.fromARGB(255, 255, 255, 255)),
+                  )
+              ]),
             ),
           ),
           Container(
@@ -242,25 +258,6 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
         }
       }
 
-      widget.parcelNumberPins.add(
-        DestinationPin(
-            sequenceNumber: int.parse(item.deliverySequenceNumber!),
-            text: item.deliverySequenceNumber.toString() +
-                ' = ' +
-                item.houseNumber! +
-                (item.houseNumberAddition != null
-                    ? item.houseNumberAddition!
-                    : ''),
-            coords: DHLCoordinates(destinationGeoCoordinates.lattitude,
-                destinationGeoCoordinates.longitude),
-            isDoublePlannedAddress: false,
-            postalcodeNumeric: item.postalCodeNumeric,
-            postalcodeAlpha: item.postalCodeAlpha,
-            houseNumberWithExtra:
-                item.houseNumber! + (item.houseNumberAddition ?? '')),
-      );
-      widget.destinationCoords.add(destinationGeoCoordinates);
-
       int sequenceNumber = int.parse(item.deliverySequenceNumber!);
       int groupLastSequenceNumber = int.parse(item.deliverySequenceNumber!);
       if (item.groupSize != null) {
@@ -279,6 +276,20 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
           addrToDisplay,
           item.indicationSignatureRequired == true,
           item.indicationNotAtNeighbours == true);
+
+      widget.parcelNumberPins.add(
+        DestinationPin(
+            numberOfParcels: groupedTask.getNumberOfPercels(),
+            sequenceNumber: int.parse(item.deliverySequenceNumber!),
+            coords: DHLCoordinates(destinationGeoCoordinates.lattitude,
+                destinationGeoCoordinates.longitude),
+            isDoublePlannedAddress: false,
+            postalcodeNumeric: item.postalCodeNumeric,
+            postalcodeAlpha: item.postalCodeAlpha,
+            houseNumberWithExtra:
+                item.houseNumber! + (item.houseNumberAddition ?? '')),
+      );
+      widget.destinationCoords.add(destinationGeoCoordinates);
 
       if (isFirst) {
         eventBus.fire(NextStopLoadedEvent(groupedTask));

@@ -276,13 +276,8 @@ class RoutingExample {
 
       _parcelNumberPins.add(
         DestinationPin(
+            numberOfParcels: 0,
             sequenceNumber: int.parse(item.deliverySequenceNumber!),
-            text: item.deliverySequenceNumber.toString() +
-                ' = ' +
-                item.houseNumber! +
-                (item.houseNumberAddition != null
-                    ? item.houseNumberAddition!
-                    : ''),
             coords: DHLCoordinates(destinationGeoCoordinates.latitude,
                 destinationGeoCoordinates.longitude),
             isDoublePlannedAddress: false,

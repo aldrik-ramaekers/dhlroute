@@ -210,7 +210,6 @@ class _HERENavigationState extends BaseNavigationState {
     if (newVal > 20) newVal = 20;
     if (newVal < 13) newVal = 13;
     widget.currentZoom = newVal;
-    print('hallo' + newVal.toString());
     hereMapController.camera.zoomTo(widget.currentZoom);
   }
 

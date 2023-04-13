@@ -22,6 +22,12 @@ class _DeveloperPageState extends State<DeveloperPage> {
   initState() {
     super.initState();
 
+    countLocalFiles().then((value) => {
+          setState(() {
+            file_count = value;
+          })
+        });
+
     localAuthService.canCheckBiometrics.then((bio) => {
           localAuthService
               .isDeviceSupported()
@@ -40,6 +46,20 @@ class _DeveloperPageState extends State<DeveloperPage> {
       }
 
       eventBus.fire(RefreshWeekEvent());
+    }
+  }
+
+  int file_count = 0;
+
+  Future<int> countLocalFiles() async {
+    if (shiftProvider is LocalShiftProviderService) {
+      LocalShiftProviderService lsp =
+          shiftProvider as LocalShiftProviderService;
+      var fileList = await lsp.getStoredFileList();
+
+      return fileList.length;
+    } else {
+      return 0;
     }
   }
 
@@ -63,6 +83,7 @@ class _DeveloperPageState extends State<DeveloperPage> {
           child: Column(
             children: [
               Text('Versie ' + program_version),
+              Text('Bestanden: ' + file_count.toString()),
               ElevatedButton(
                   onPressed: _toggleDebugMode,
                   child: Text('Test Modus: ' + debug_mode.toString()))

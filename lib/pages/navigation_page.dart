@@ -112,59 +112,59 @@ class _NavigationPageState extends State<NavigationPage> {
     }
 
     return Scaffold(
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              InkWell(
-                splashColor: Colors.blue,
-                onLongPress: () => _mockStopInComplete(),
-                child: FloatingActionButton(
-                  onPressed: () => _mockStopComplete(),
-                  child: Icon(Icons.check_circle),
-                ),
-              ),
-              Visibility(
-                visible:
-                    navigation == null ? false : navigation!.isLookingAround,
-                child: FloatingActionButton(
-                  backgroundColor: Colors.green,
-                  child: const Icon(Icons.center_focus_strong),
-                  onPressed: () => {
-                    changeIsLookingAround(false),
-                    eventBus.fire(FlyToEvent(navigation!.lastPosition))
-                  },
-                ),
-              ),
-              Padding(padding: EdgeInsets.all(5)),
-              FloatingActionButton(
-                onPressed: () => _zoomOut(),
-                child: Icon(Icons.zoom_out),
-              ),
-              Padding(padding: EdgeInsets.all(2)),
-              FloatingActionButton(
-                onPressed: () => _zoomIn(),
-                child: Icon(Icons.zoom_in),
-              )
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            _createNextDropInfoWidget(),
-            Container(
-              decoration: BoxDecoration(color: Colors.black),
-              height: 2,
-            ),
-            Expanded(
-              child: Stack(
-                children: [navigation!],
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            InkWell(
+              splashColor: Colors.blue,
+              onLongPress: () => _mockStopInComplete(),
+              child: FloatingActionButton(
+                onPressed: () => _mockStopComplete(),
+                child: Icon(Icons.check_circle),
               ),
             ),
+            Visibility(
+              visible: navigation == null ? false : navigation!.isLookingAround,
+              child: FloatingActionButton(
+                backgroundColor: Colors.green,
+                child: const Icon(Icons.center_focus_strong),
+                onPressed: () => {
+                  changeIsLookingAround(false),
+                  eventBus.fire(FlyToEvent(navigation!.lastPosition))
+                },
+              ),
+            ),
+            Padding(padding: EdgeInsets.all(5)),
+            FloatingActionButton(
+              onPressed: () => _zoomOut(),
+              child: Icon(Icons.zoom_out),
+            ),
+            Padding(padding: EdgeInsets.all(2)),
+            FloatingActionButton(
+              onPressed: () => _zoomIn(),
+              child: Icon(Icons.zoom_in),
+            )
           ],
-        ));
+        ),
+      ),
+      body: Column(
+        children: [
+          _createNextDropInfoWidget(),
+          Container(
+            decoration: BoxDecoration(color: Colors.black),
+            height: 2,
+          ),
+          Expanded(
+            child: Stack(
+              children: [navigation!],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget getLoadingScreen() {
@@ -180,11 +180,11 @@ class _NavigationPageState extends State<NavigationPage> {
 
     return Container(
       decoration: BoxDecoration(color: Colors.white),
-      height: 80,
+      height: 60,
       child: Column(
         children: [
           SizedBox(
-            height: 10,
+            height: 5,
           ),
           Container(
             height: 50,
@@ -207,11 +207,8 @@ class _NavigationPageState extends State<NavigationPage> {
                         ),
                       ),
                       TextSpan(
-                        text: ' ' +
-                            (activeTask!.lastParcelNumber -
-                                    activeTask!.firstParcelNumber +
-                                    1)
-                                .toString(),
+                        text:
+                            ' ' + (activeTask!.getNumberOfPercels()).toString(),
                         style: TextStyle(
                           color: Color.fromARGB(150, 0, 0, 0),
                           fontSize: 12,
@@ -231,6 +228,8 @@ class _NavigationPageState extends State<NavigationPage> {
                 Expanded(
                   child: Text(
                     activeTask!.fullAddress,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                     style: TextStyle(
                       color: Color.fromARGB(255, 0, 0, 0),
                       fontSize: 15,
@@ -239,11 +238,6 @@ class _NavigationPageState extends State<NavigationPage> {
                 ),
               ],
             ),
-          ),
-          Container(
-            height: 20,
-            padding: EdgeInsets.only(left: 10, right: 10),
-            child: Row(children: [Text(activeTask!.deliveryTimeBlock)]),
           ),
         ],
       ),

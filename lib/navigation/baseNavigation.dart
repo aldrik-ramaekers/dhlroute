@@ -65,6 +65,7 @@ abstract class BaseNavigation extends StatefulWidget {
   bool isLookingAround = false;
   double currentZoom = 20;
   DHLCoordinates lastPosition = DHLCoordinates(0, 0);
+  int routeSectionCursor = 0;
 
   StreamSubscription? stopCompletedEvent;
   StreamSubscription? stopIncompletedEvent;
@@ -79,8 +80,6 @@ abstract class BaseNavigation extends StatefulWidget {
 }
 
 abstract class BaseNavigationState extends State<BaseNavigation> {
-  int routeSectionCursor = 0;
-
   StreamSubscription? changeZoomEvent;
   StreamSubscription? flyToEvent;
 
@@ -166,7 +165,9 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
   // if address is double planned and there is a stop before this one.
   bool shouldDoublePlannedAddressBeVisible(DestinationPin taskToCheck) {
     if (!taskToCheck.isDoublePlannedAddress) return true;
-    for (int i = routeSectionCursor; i < widget.parcelNumberPins.length; i++) {
+    for (int i = widget.routeSectionCursor;
+        i < widget.parcelNumberPins.length;
+        i++) {
       var item = widget.parcelNumberPins[i];
 
       if (item == taskToCheck) {

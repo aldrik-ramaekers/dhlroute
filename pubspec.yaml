@@ -49,6 +49,8 @@ dependencies:
   http: ^0.13.5
   auto_orientation: ^2.2.1
   wakelock: ^0.6.2
+  flutter_osm_plugin: ^0.53.2
+  flutter_map: ^3.1.0
 
 dev_dependencies:
   flutter_test:

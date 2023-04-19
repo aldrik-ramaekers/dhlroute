@@ -1,4 +1,4 @@
-String program_version = '0.14 [13/04/2023]';
+String program_version = '0.15 [19/04/2023]';
 bool debug_mode = false;
 
 class ShiftType {

@@ -96,20 +96,22 @@ class _HERENavigationState extends BaseNavigationState {
     });
 
     widget.stopCompletedEvent = eventBus.on<StopCompletedEvent>().listen((e) {
-      routeSectionCursor += 1;
-      if (routeSectionCursor >= widget.allTasks.length) {
-        routeSectionCursor = widget.allTasks.length - 1;
+      widget.routeSectionCursor += 1;
+      if (widget.routeSectionCursor >= widget.allTasks.length) {
+        widget.routeSectionCursor = widget.allTasks.length - 1;
       }
       updateHighlightedRouteSections();
-      eventBus.fire(NextStopLoadedEvent(widget.allTasks[routeSectionCursor]));
+      eventBus.fire(
+          NextStopLoadedEvent(widget.allTasks[widget.routeSectionCursor]));
     });
 
     widget.stopIncompletedEvent =
         eventBus.on<StopIncompletedEvent>().listen((e) {
-      routeSectionCursor -= 1;
-      if (routeSectionCursor < 0) routeSectionCursor = 0;
+      widget.routeSectionCursor -= 1;
+      if (widget.routeSectionCursor < 0) widget.routeSectionCursor = 0;
       updateHighlightedRouteSections(force: true);
-      eventBus.fire(NextStopLoadedEvent(widget.allTasks[routeSectionCursor]));
+      eventBus.fire(
+          NextStopLoadedEvent(widget.allTasks[widget.routeSectionCursor]));
     });
 
     blacklistProvider
@@ -251,14 +253,17 @@ class _HERENavigationState extends BaseNavigationState {
       DestinationPin pin = widget.parcelNumberPins.elementAt(i);
 
       Color color = Color.fromARGB(200, 0, 144, 138);
-      if (i == routeSectionCursor) color = Color.fromARGB(199, 143, 8, 31);
-      if (i == routeSectionCursor + 1) color = Color.fromARGB(197, 13, 36, 241);
+      if (i == widget.routeSectionCursor)
+        color = Color.fromARGB(199, 143, 8, 31);
+      if (i == widget.routeSectionCursor + 1)
+        color = Color.fromARGB(197, 13, 36, 241);
       if (destinationPinIsInBlacklist(widget.parcelNumberPins[i])) {
         color = Color.fromRGBO(143, 8, 31, 0.78);
       }
 
-      bool forceUpdateThisPin =
-          force && (i > routeSectionCursor - 3 && i < routeSectionCursor + 3);
+      bool forceUpdateThisPin = force &&
+          (i > widget.routeSectionCursor - 3 &&
+              i < widget.routeSectionCursor + 3);
 
       if (!shouldDoublePlannedAddressBeVisible(pin)) {
         pin.pin?.unpin();
@@ -266,7 +271,8 @@ class _HERENavigationState extends BaseNavigationState {
         continue;
       }
 
-      if (i > routeSectionCursor + 1 && i < routeSectionCursor + maxPins) {
+      if (i > widget.routeSectionCursor + 1 &&
+          i < widget.routeSectionCursor + maxPins) {
         if (forceUpdateThisPin) {
           pin.pin?.unpin();
           pin.pin = null;
@@ -281,7 +287,8 @@ class _HERENavigationState extends BaseNavigationState {
         pin.pin = null;
       }
 
-      if (i == routeSectionCursor || i == routeSectionCursor + 1) {
+      if (i == widget.routeSectionCursor ||
+          i == widget.routeSectionCursor + 1) {
         var widgetPin =
             createPinWidget(pin, color, widget.destinationCoords[i]);
         pin.pin = widgetPin;
@@ -296,15 +303,17 @@ class _HERENavigationState extends BaseNavigationState {
       MapPolyline path = _pathSections.elementAt(i);
 
       // previous section
-      if (i == routeSectionCursor - 1) {
+      if (i == widget.routeSectionCursor - 1) {
         section.lineColor = Color.fromARGB(160, 168, 113, 108);
         path.lineColor = Color.fromARGB(0, 255, 255, 255);
       }
       // current and next 5 sections
-      else if (i >= routeSectionCursor &&
-          i < routeSectionCursor + maxSections) {
+      else if (i >= widget.routeSectionCursor &&
+          i < widget.routeSectionCursor + maxSections) {
         section.lineColor = Color.fromARGB(
-            (255 - ((255 / (maxSections + 1)) * (i - routeSectionCursor)))
+            (255 -
+                    ((255 / (maxSections + 1)) *
+                        (i - widget.routeSectionCursor)))
                 .toInt(),
             0,
             144,
@@ -313,7 +322,8 @@ class _HERENavigationState extends BaseNavigationState {
         section.lineColor = Color.fromARGB(0, 255, 255, 255);
       }
 
-      if (i >= routeSectionCursor && i < routeSectionCursor + maxWalkPaths) {
+      if (i >= widget.routeSectionCursor &&
+          i < widget.routeSectionCursor + maxWalkPaths) {
         path.lineColor = Color.fromARGB(160, 255, 0, 0);
       } else {
         path.lineColor = Color.fromARGB(0, 255, 255, 255);

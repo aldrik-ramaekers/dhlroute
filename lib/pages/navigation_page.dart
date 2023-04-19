@@ -3,6 +3,7 @@ import 'package:auto_orientation/auto_orientation.dart';
 import 'package:flutter/services.dart';
 import 'package:training_planner/navigation/HERENavigation.dart';
 import 'package:training_planner/navigation/baseNavigation.dart';
+import 'package:training_planner/navigation/openstreetmapNavigation.dart';
 import 'package:training_planner/route.dart' as DHLRoute;
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';

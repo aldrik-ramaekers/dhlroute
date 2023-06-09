@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_archive/flutter_archive.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:training_planner/config/defaults.dart';
 import 'package:training_planner/events/RefreshWeekEvent.dart';
 import 'package:training_planner/main.dart';
@@ -69,6 +73,74 @@ class _DeveloperPageState extends State<DeveloperPage> {
     });
   }
 
+  Future<String?> getDownloadPath() async {
+    Directory? directory;
+    try {
+      if (Platform.isIOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
+        directory = Directory('/storage/emulated/0/Download');
+        // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
+        // ignore: avoid_slow_async_io
+        if (!await directory.exists())
+          directory = await getExternalStorageDirectory();
+      }
+    } catch (err, stack) {
+      print("Cannot get download folder path");
+    }
+    return directory?.path;
+  }
+
+  File _createZipFile(String fileName) {
+    final zipFilePath = fileName;
+    final zipFile = File(zipFilePath);
+
+    if (zipFile.existsSync()) {
+      print("Deleting existing zip file: ${zipFile.path}");
+      zipFile.deleteSync();
+    }
+    return zipFile;
+  }
+
+  _exportLocalFiles() async {
+    List<String> result = [];
+    Directory dir = await getApplicationDocumentsDirectory();
+    var list = dir.listSync();
+    for (var item in list) {
+      if (item.path.endsWith('.json')) {
+        result.add(item.path);
+      }
+    }
+
+    if (await Permission.storage.request().isGranted) {
+      String? path = await getDownloadPath();
+      if (path != null) {
+        path += '/backup.zip';
+        var zip = _createZipFile(path);
+
+        int onProgressCallCount1 = 0;
+        try {
+          await ZipFile.createFromDirectory(
+            sourceDir: await getApplicationDocumentsDirectory(),
+            zipFile: zip,
+            recurseSubDirs: false,
+            includeBaseDirectory: false,
+            onZipping: (fileName, isDirectory, progress) {
+              ++onProgressCallCount1;
+              print('Zip #1:');
+              print('progress: ${progress.toStringAsFixed(1)}%');
+              print('name: $fileName');
+              print('isDirectory: $isDirectory');
+              return ZipFileOperation.includeItem;
+            },
+          );
+        } on PlatformException catch (e) {
+          print(e);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,7 +158,9 @@ class _DeveloperPageState extends State<DeveloperPage> {
               Text('Bestanden: ' + file_count.toString()),
               ElevatedButton(
                   onPressed: _toggleDebugMode,
-                  child: Text('Test Modus: ' + debug_mode.toString()))
+                  child: Text('Test Modus: ' + debug_mode.toString())),
+              ElevatedButton(
+                  onPressed: _exportLocalFiles, child: Text('Export'))
               /*
               TextButton(
                   onPressed: () {

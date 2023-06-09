@@ -28,16 +28,14 @@ import 'package:here_sdk/core.engine.dart';
 import 'package:here_sdk/core.errors.dart';
 import 'package:here_sdk/mapview.dart';
 
-Future<void> main() async {
+void main() {
   _initializeHERESDK();
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations(
-      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-  configureNotifications();
-  runZonedGuarded(() {
+  SystemChrome.setPreferredOrientations(
+          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
+      .then((value) {
+    configureNotifications();
     runApp(const MyApp());
-  }, (error, stack) {
-    // tja..
   });
 }
 

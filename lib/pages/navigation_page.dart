@@ -67,7 +67,7 @@ class _NavigationPageState extends State<NavigationPage> {
   initState() {
     super.initState();
 
-    SystemChrome.setEnabledSystemUIOverlays([]);
+    SystemChrome.setPreferredOrientations([]);
     Wakelock.enable();
     AutoOrientation.portraitDownMode();
 
@@ -251,8 +251,8 @@ class _NavigationPageState extends State<NavigationPage> {
     taskLoadedEvent?.cancel();
     Wakelock.disable();
     AutoOrientation.portraitUpMode();
-    SystemChrome.setEnabledSystemUIOverlays(
-        [SystemUiOverlay.top, SystemUiOverlay.bottom]);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     super.dispose();
   }
 }

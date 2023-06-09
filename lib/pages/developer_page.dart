@@ -73,24 +73,6 @@ class _DeveloperPageState extends State<DeveloperPage> {
     });
   }
 
-  Future<String?> getDownloadPath() async {
-    Directory? directory;
-    try {
-      if (Platform.isIOS) {
-        directory = await getApplicationDocumentsDirectory();
-      } else {
-        directory = Directory('/storage/emulated/0/Download');
-        // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
-        // ignore: avoid_slow_async_io
-        if (!await directory.exists())
-          directory = await getExternalStorageDirectory();
-      }
-    } catch (err, stack) {
-      print("Cannot get download folder path");
-    }
-    return directory?.path;
-  }
-
   File _createZipFile(String fileName) {
     final zipFilePath = fileName;
     final zipFile = File(zipFilePath);
@@ -113,9 +95,9 @@ class _DeveloperPageState extends State<DeveloperPage> {
     }
 
     if (await Permission.storage.request().isGranted) {
-      String? path = await getDownloadPath();
+      String? path = await backupService.getDownloadPath();
       if (path != null) {
-        path += '/backup.zip';
+        path += 'backup.zip';
         var zip = _createZipFile(path);
 
         int onProgressCallCount1 = 0;
@@ -134,6 +116,9 @@ class _DeveloperPageState extends State<DeveloperPage> {
               return ZipFileOperation.includeItem;
             },
           );
+
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Backup created')));
         } on PlatformException catch (e) {
           print(e);
         }

@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:training_planner/config/defaults.dart';
+import 'package:training_planner/main.dart';
 import 'package:training_planner/models/login_request.dart';
 import 'package:training_planner/models/login_response.dart';
 import 'package:training_planner/models/route_list.dart';
 import 'package:training_planner/route.dart';
+import 'package:training_planner/services/backup_helper_service.dart';
 import 'package:training_planner/services/istoregear_api_service.dart';
 import 'package:training_planner/route.dart' as DHLRoute;
 import 'package:training_planner/services/mock_route_provider_service.dart';
@@ -33,6 +35,7 @@ class StoregearApiService extends IStoregearApiService {
       return res;
     } else {
       print(response.body);
+      backupService.writeStringToFile(response.body, 'failed_login.txt');
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed login');
@@ -65,6 +68,7 @@ class StoregearApiService extends IStoregearApiService {
       }
       return RouteList.fromJson(content);
     } else {
+      backupService.writeStringToFile(response.body, 'failed_routelist.txt');
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load routes');
@@ -92,6 +96,7 @@ class StoregearApiService extends IStoregearApiService {
       }
       return RouteInfo.fromJson(content).route;
     } else {
+      backupService.writeStringToFile(response.body, 'failed_route.txt');
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load route');

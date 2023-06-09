@@ -137,8 +137,8 @@ class Task {
   String? beginDeliveryPickupWindow;
   String? endDeliveryPickupWindow;
   String? deliveryInstruction;
-  Null? parcelDeliveryRemark;
-  Null? courierRemark;
+  dynamic? parcelDeliveryRemark;
+  dynamic? courierRemark;
   String? serviceType;
   bool? servicepointParcel;
   String? servicepointid;

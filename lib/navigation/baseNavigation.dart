@@ -1,15 +1,20 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:barcode_image/barcode_image.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
+import 'package:side_sheet/side_sheet.dart';
 import 'package:training_planner/events/NextStopLoadedEvent.dart';
 import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/main.dart';
-
 import '../route.dart' as DHLRoute;
 import 'package:training_planner/services/iblacklist_provider_service.dart';
 
 class DestinationPin {
   final int numberOfParcels;
   final int sequenceNumber;
+  final String? pid;
   final DHLCoordinates coords;
   final String? postalcodeNumeric;
   final String? postalcodeAlpha;
@@ -24,7 +29,8 @@ class DestinationPin {
       required this.isDoublePlannedAddress,
       required this.postalcodeNumeric,
       required this.postalcodeAlpha,
-      required this.houseNumberWithExtra});
+      required this.houseNumberWithExtra,
+      required this.pid});
 }
 
 class DHLCoordinates {
@@ -93,6 +99,19 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
     });
   }
 
+  buildBarcode(String pid) {
+    // Create an image
+    final image = img.Image((MediaQuery.of(context).size.width * 1).round(),
+        (MediaQuery.of(context).size.height * 1).round());
+
+    // Fill it with a solid color (white)
+    img.fill(image, 0xFFFFFF);
+
+    // Draw the barcode
+    drawBarcode(image, Barcode.pdf417(), pid);
+    return Uint8List.fromList(img.encodePng(image));
+  }
+
   void flyTo(DHLCoordinates coords);
   void changeZoom(double newVal);
   Future<void> addRoute(DHLRoute.Route route);
@@ -114,42 +133,51 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
             width: 2),
       ),
       child: GestureDetector(
-          child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 0, 0, 0),
-              borderRadius: BorderRadius.circular(10),
-              shape: BoxShape.rectangle,
-            ),
-            child: RichText(
-              text: TextSpan(children: [
-                TextSpan(
-                  text: pin.sequenceNumber.toString(),
-                  style: TextStyle(
-                      fontSize: 20.0,
-                      color: Color.fromARGB(255, 255, 255, 255)),
+          onTap: () async {
+            SideSheet.right(
+                body: Transform.rotate(
+                  angle: -3.1415 / 2,
+                  child: Container(
+                      child: Image.memory(buildBarcode(pin.pid ?? ''))),
                 ),
-                if (pin.numberOfParcels > 1)
-                  TextSpan(
-                    text: ' ' + pin.numberOfParcels.toString(),
-                    style: TextStyle(
-                        fontSize: 12.0,
-                        color: Color.fromARGB(255, 255, 255, 255)),
-                  )
-              ]),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.all(3),
-            child: Text(
-              pin.houseNumberWithExtra ?? 'Zie pakket',
-              style: TextStyle(fontSize: 20.0),
-            ),
-          ),
-        ],
-      )),
+                context: context);
+          },
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 0, 0, 0),
+                  borderRadius: BorderRadius.circular(10),
+                  shape: BoxShape.rectangle,
+                ),
+                child: RichText(
+                  text: TextSpan(children: [
+                    TextSpan(
+                      text: pin.sequenceNumber.toString(),
+                      style: TextStyle(
+                          fontSize: 20.0,
+                          color: Color.fromARGB(255, 255, 255, 255)),
+                    ),
+                    if (pin.numberOfParcels > 1)
+                      TextSpan(
+                        text: ' ' + pin.numberOfParcels.toString(),
+                        style: TextStyle(
+                            fontSize: 12.0,
+                            color: Color.fromARGB(255, 255, 255, 255)),
+                      )
+                  ]),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(3),
+                child: Text(
+                  pin.houseNumberWithExtra ?? 'Zie pakket',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+              ),
+            ],
+          )),
     );
   }
 
@@ -288,7 +316,8 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
             postalcodeNumeric: item.postalCodeNumeric,
             postalcodeAlpha: item.postalCodeAlpha,
             houseNumberWithExtra:
-                item.houseNumber! + (item.houseNumberAddition ?? '')),
+                item.houseNumber! + (item.houseNumberAddition ?? ''),
+            pid: item.pid!),
       );
       widget.destinationCoords.add(destinationGeoCoordinates);
 

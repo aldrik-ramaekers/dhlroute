@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:auto_orientation/auto_orientation.dart';
 import 'package:flutter/services.dart';
+import 'package:side_sheet/side_sheet.dart';
 import 'package:training_planner/navigation/HERENavigation.dart';
 import 'package:training_planner/navigation/baseNavigation.dart';
 import 'package:training_planner/navigation/openstreetmapNavigation.dart';
@@ -69,6 +70,7 @@ class _NavigationPageState extends State<NavigationPage> {
 
     SystemChrome.setPreferredOrientations([]);
     Wakelock.enable();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
     AutoOrientation.portraitDownMode();
 
     _handleLocationPermission();
@@ -106,64 +108,93 @@ class _NavigationPageState extends State<NavigationPage> {
     eventBus.fire(StopIncompletedEvent());
   }
 
+  Future<bool> showExitPopup() async {
+    return await showDialog(
+          //show confirm dialogue
+          //the return value will be from "Yes" or "No" options
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Terug'),
+            content: Text('Terug naar vorig scherm?'),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                //return false when click on "NO"
+                child: Text('Nee'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                //return true when click on "Yes"
+                child: Text('Ja'),
+              ),
+            ],
+          ),
+        ) ??
+        false; //if showDialouge had returned null, then return false
+  }
+
   @override
   Widget build(BuildContext context) {
     if (navigation == null) {
       navigation = HERENavigation(route: widget.route);
     }
 
-    return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            InkWell(
-              splashColor: Colors.blue,
-              onLongPress: () => _mockStopInComplete(),
-              child: FloatingActionButton(
-                onPressed: () => _mockStopComplete(),
-                child: Icon(Icons.check_circle),
+    return WillPopScope(
+      onWillPop: showExitPopup, //call function on back button press
+      child: Scaffold(
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              InkWell(
+                splashColor: Colors.blue,
+                onLongPress: () => _mockStopInComplete(),
+                child: FloatingActionButton(
+                  onPressed: () => _mockStopComplete(),
+                  child: Icon(Icons.check_circle),
+                ),
+              ),
+              Visibility(
+                visible:
+                    navigation == null ? false : navigation!.isLookingAround,
+                child: FloatingActionButton(
+                  backgroundColor: Colors.green,
+                  child: const Icon(Icons.center_focus_strong),
+                  onPressed: () => {
+                    changeIsLookingAround(false),
+                    eventBus.fire(FlyToEvent(navigation!.lastPosition))
+                  },
+                ),
+              ),
+              Padding(padding: EdgeInsets.all(5)),
+              FloatingActionButton(
+                onPressed: () => _zoomOut(),
+                child: Icon(Icons.zoom_out),
+              ),
+              Padding(padding: EdgeInsets.all(2)),
+              FloatingActionButton(
+                onPressed: () => _zoomIn(),
+                child: Icon(Icons.zoom_in),
+              ),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            _createNextDropInfoWidget(),
+            Container(
+              decoration: BoxDecoration(color: Colors.black),
+              height: 2,
+            ),
+            Expanded(
+              child: Stack(
+                children: [navigation!],
               ),
             ),
-            Visibility(
-              visible: navigation == null ? false : navigation!.isLookingAround,
-              child: FloatingActionButton(
-                backgroundColor: Colors.green,
-                child: const Icon(Icons.center_focus_strong),
-                onPressed: () => {
-                  changeIsLookingAround(false),
-                  eventBus.fire(FlyToEvent(navigation!.lastPosition))
-                },
-              ),
-            ),
-            Padding(padding: EdgeInsets.all(5)),
-            FloatingActionButton(
-              onPressed: () => _zoomOut(),
-              child: Icon(Icons.zoom_out),
-            ),
-            Padding(padding: EdgeInsets.all(2)),
-            FloatingActionButton(
-              onPressed: () => _zoomIn(),
-              child: Icon(Icons.zoom_in),
-            )
           ],
         ),
-      ),
-      body: Column(
-        children: [
-          _createNextDropInfoWidget(),
-          Container(
-            decoration: BoxDecoration(color: Colors.black),
-            height: 2,
-          ),
-          Expanded(
-            child: Stack(
-              children: [navigation!],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -251,6 +282,8 @@ class _NavigationPageState extends State<NavigationPage> {
     taskLoadedEvent?.cancel();
     Wakelock.disable();
     AutoOrientation.portraitUpMode();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+        overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     super.dispose();

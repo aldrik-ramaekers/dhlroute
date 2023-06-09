@@ -284,7 +284,8 @@ class RoutingExample {
             postalcodeNumeric: item.postalCodeNumeric,
             postalcodeAlpha: item.postalCodeAlpha,
             houseNumberWithExtra:
-                item.houseNumber! + (item.houseNumberAddition ?? '')),
+                item.houseNumber! + (item.houseNumberAddition ?? ''),
+            pid: item.pid),
       );
       _destinationCoords.add(destinationGeoCoordinates);
 

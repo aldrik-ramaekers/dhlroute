@@ -8,6 +8,7 @@ import 'package:side_sheet/side_sheet.dart';
 import 'package:training_planner/events/NextStopLoadedEvent.dart';
 import 'package:training_planner/events/StopCompletedEvent.dart';
 import 'package:training_planner/main.dart';
+import 'package:screen_brightness/screen_brightness.dart';
 import '../route.dart' as DHLRoute;
 import 'package:training_planner/services/iblacklist_provider_service.dart';
 
@@ -88,6 +89,7 @@ abstract class BaseNavigation extends StatefulWidget {
 abstract class BaseNavigationState extends State<BaseNavigation> {
   StreamSubscription? changeZoomEvent;
   StreamSubscription? flyToEvent;
+  Widget? sidePanelContent;
 
   BaseNavigationState() {
     changeZoomEvent = eventBus.on<ChangeZoomEvent>().listen((event) {
@@ -101,8 +103,8 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
 
   buildBarcode(String pid) {
     // Create an image
-    final image = img.Image((MediaQuery.of(context).size.width * 1).round(),
-        (MediaQuery.of(context).size.height * 1).round());
+    final image =
+        img.Image((MediaQuery.of(context).size.width * 0.6).round(), 50);
 
     // Fill it with a solid color (white)
     img.fill(image, 0xFFFFFF);
@@ -119,29 +121,106 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
   dynamic createPinWidget(
       DestinationPin pin, Color color, DHLCoordinates coords);
 
+  Widget getSidePanelContentOrLoadingMessage() {
+    if (sidePanelContent == null) {
+      createSidePanel().then((value) {
+        setState(() {
+          sidePanelContent = value;
+        });
+      });
+    }
+
+    return sidePanelContent ?? Text('Bezig met laden');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<Widget> createSidePanel() async {
+    var entryWidgets = [];
+    if (widget.route.tasks != null) {
+      for (var item in widget.route.tasks!) {
+        entryWidgets.add(Container(
+          height: 80,
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: Row(children: [
+              Container(
+                width: MediaQuery.of(context).size.width * 0.1,
+                padding: EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 0, 0, 0),
+                  borderRadius: BorderRadius.circular(10),
+                  shape: BoxShape.rectangle,
+                ),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(children: [
+                    TextSpan(
+                      text: item.deliverySequenceNumber ?? '?',
+                      style: TextStyle(
+                          fontSize: 12.0,
+                          color: Color.fromARGB(255, 255, 255, 255)),
+                    ),
+                  ]),
+                ),
+              ),
+              Padding(padding: EdgeInsets.all(10)),
+              Image.memory(
+                buildBarcode(item.pid ?? ''),
+                width: MediaQuery.of(context).size.width * 0.6,
+                height: 50,
+              ),
+            ]),
+          ),
+        ));
+      }
+    }
+
+    return SafeArea(
+      child: CustomScrollView(
+        physics: null,
+        slivers: [
+          SliverPadding(padding: EdgeInsets.only(top: 20)),
+          SliverList(
+              delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
+              return entryWidgets[index];
+            },
+            childCount: entryWidgets.length,
+          )),
+          SliverPadding(padding: EdgeInsets.only(top: 20)),
+        ],
+      ),
+    );
+  }
+
   Widget createPin(DestinationPin pin, Color backgroundColor,
       {bool isDoublePlannedAddress = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(10),
-        shape: BoxShape.rectangle,
-        border: Border.all(
-            color: isDoublePlannedAddress
-                ? Color.fromARGB(255, 255, 0, 0)
-                : Color.fromARGB(0, 0, 0, 0),
-            width: 2),
-      ),
-      child: GestureDetector(
-          onTap: () async {
-            SideSheet.right(
-                body: Transform.rotate(
-                  angle: -3.1415 / 2,
-                  child: Container(
-                      child: Image.memory(buildBarcode(pin.pid ?? ''))),
-                ),
-                context: context);
-          },
+    return GestureDetector(
+      onTap: () async {
+        await ScreenBrightness().setScreenBrightness(1.0);
+
+        await SideSheet.right(
+            body: getSidePanelContentOrLoadingMessage(),
+            context: context,
+            width: MediaQuery.of(context).size.width * 0.85);
+
+        await ScreenBrightness().resetScreenBrightness();
+      },
+      child: Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(10),
+            shape: BoxShape.rectangle,
+            border: Border.all(
+                color: isDoublePlannedAddress
+                    ? Color.fromARGB(255, 255, 0, 0)
+                    : Color.fromARGB(0, 0, 0, 0),
+                width: 2),
+          ),
           child: Row(
             children: [
               Container(

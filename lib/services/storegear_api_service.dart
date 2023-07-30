@@ -27,18 +27,21 @@ class StoregearApiService extends IStoregearApiService {
         headers: {'X-REQ-UUID': Uuid().v1()},
         body: jsonEncode(req));
 
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      LoginResponse res = LoginResponse.fromJson(jsonDecode(response.body));
-      apiKey = res.apiKey!;
-      return res;
-    } else {
-      print(response.body);
+    try {
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
+        
+        LoginResponse res = LoginResponse.fromJson(jsonDecode(response.body));
+        apiKey = res.apiKey!;
+        return res;
+      } else {
+        throw Exception('Failed login');
+      }
+    }
+    catch (ex) {
       backupService.writeStringToFile(response.body, 'failed_login.txt');
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed login');
+      throw Exception('Failed to load route');
     }
   }
 
@@ -58,20 +61,23 @@ class StoregearApiService extends IStoregearApiService {
         Uri.parse('http://dhlapis.com/delivery/v1/routes'),
         headers: {'X-API-KEY': apiKey, 'X-REQ-UUID': Uuid().v1()});
 
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
+    try {
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
 
-      var content = jsonDecode(response.body);
-      if (content["message"] != null) {
-        return RouteList(routes: []);
+        var content = jsonDecode(response.body);
+        if (content["message"] != null) {
+          return RouteList(routes: []);
+        }
+        return RouteList.fromJson(content);
+      } else {
+        throw Exception('Failed to load routes');
       }
-      return RouteList.fromJson(content);
-    } else {
+    }
+    catch (ex) {
       backupService.writeStringToFile(response.body, 'failed_routelist.txt');
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load routes');
+      throw Exception('Failed to load route');
     }
   }
 
@@ -86,19 +92,22 @@ class StoregearApiService extends IStoregearApiService {
             'http://dhlapis.com/delivery/v1/routes/' + tripkey.toString()),
         headers: {'X-API-KEY': apiKey, 'X-REQ-UUID': Uuid().v1()});
 
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
+    try {
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        // then parse the JSON.
 
-      var content = jsonDecode(response.body);
-      if (content["message"] != null) {
-        return null;
+        var content = jsonDecode(response.body);
+        if (content["message"] != null) {
+          return null;
+        }
+        return RouteInfo.fromJson(content).route;
+      } else {
+        throw Exception('Failed to load route');
       }
-      return RouteInfo.fromJson(content).route;
-    } else {
+    }
+    catch (ex) {
       backupService.writeStringToFile(response.body, 'failed_route.txt');
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
       throw Exception('Failed to load route');
     }
   }

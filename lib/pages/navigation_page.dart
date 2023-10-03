@@ -136,7 +136,7 @@ class _NavigationPageState extends State<NavigationPage> {
   @override
   Widget build(BuildContext context) {
     if (navigation == null) {
-      navigation = HERENavigation(route: widget.route);
+      navigation = OpenstreetmapNavigation(route: widget.route);
     }
 
     return WillPopScope(

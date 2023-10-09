@@ -89,47 +89,11 @@ class _OpenstreetNavigationState extends BaseNavigationState
   Future<void> addRoute(DHLRoute.Route route) async {
     if (route.tasks == null) return;
 
-    Position currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    GeoPoint routeStartCoords = GeoPoint(
-        latitude: currentPosition.latitude,
-        longitude: currentPosition.longitude);
-
-    List<GeoPoint> waypoints = [routeStartCoords];
-    //List<MultiRoadConfiguration> configs = [];
-
     groupTasksIntoGroups(route);
-
-    /*
-    GeoPoint prevCoord = routeStartCoords;
-    for (var item in widget.parcelNumberPins) {
-      GeoPoint point = GeoPoint(
-          latitude: item.coords.lattitude, longitude: item.coords.longitude);
-
-      waypoints.add(point);
-
-      //configs.add(MultiRoadConfiguration(
-      //  startPoint: prevCoord,
-      //  destinationPoint: point,
-      //));
-
-      prevCoord = point;
-    }
 
     for (var item in widget.parcelNumberPins) {
       item.isDoublePlannedAddress = isAddressDoublePlanned(item);
     }
-    */
-
-    /*
-    roads = await controller.drawMultipleRoad(
-      configs,
-      commonRoadOption: MultiRoadOption(
-        roadWidth: 10,
-        roadColor: Colors.blue,
-      ),
-    );
-    */
 
     eventBus.fire(NextStopLoadedEvent(widget.allTasks[0]));
 
@@ -224,9 +188,9 @@ class _OpenstreetNavigationState extends BaseNavigationState
 
     markers.clear();
 
-    for (int i = widget.routeSectionCursor - 1;
-        i < widget.routeSectionCursor + 7;
-        i++) {
+    for (int i = widget.routeSectionCursor + maxPins;
+        i >= widget.routeSectionCursor;
+        i--) {
       if (i < 0 || i >= widget.parcelNumberPins.length) continue;
 
       DestinationPin pin = widget.parcelNumberPins.elementAt(i);
@@ -239,12 +203,25 @@ class _OpenstreetNavigationState extends BaseNavigationState
         color = Color.fromRGBO(143, 8, 31, 0.78);
       }
 
+      if (!shouldDoublePlannedAddressBeVisible(pin)) {
+        continue;
+      }
+
       markers.add(FlutterMap.Marker(
           point: LatLng(pin.coords.lattitude, pin.coords.longitude),
           width: 80,
           height: 34,
-          builder: (ctx) => createPin(pin, color,
-              isDoublePlannedAddress: pin.isDoublePlannedAddress)));
+          builder: (ctx) => OverflowBox(
+                child: Row(
+                  children: [
+                    createPin(pin, color,
+                        isDoublePlannedAddress: pin.isDoublePlannedAddress),
+                    Expanded(
+                      child: Text(''),
+                    ),
+                  ],
+                ),
+              )));
     }
 
     setState(() {});

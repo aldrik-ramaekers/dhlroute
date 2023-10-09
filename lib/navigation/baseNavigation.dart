@@ -90,6 +90,7 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
   StreamSubscription? changeZoomEvent;
   StreamSubscription? flyToEvent;
   Widget? sidePanelContent;
+  var scrollController = ScrollController();
 
   BaseNavigationState() {
     changeZoomEvent = eventBus.on<ChangeZoomEvent>().listen((event) {
@@ -121,14 +122,26 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
   dynamic createPinWidget(
       DestinationPin pin, Color color, DHLCoordinates coords);
 
-  Widget getSidePanelContentOrLoadingMessage() {
+  Future<Widget> getSidePanelContentOrLoadingMessage(String focusPid) async {
     if (sidePanelContent == null) {
-      createSidePanel().then((value) {
-        setState(() {
-          sidePanelContent = value;
-        });
+      var panel = await createSidePanel(focusPid);
+      setState(() {
+        sidePanelContent = panel;
       });
     }
+
+    Future.delayed(const Duration(milliseconds: 200), () {
+      int index = 0;
+      int foundPidIndex = 0;
+      for (var item in widget.route.tasks!) {
+        if (item.pid == focusPid) foundPidIndex = index;
+        index++;
+      }
+
+      if (scrollController.hasClients) {
+        scrollController.jumpTo(80.0 * foundPidIndex);
+      }
+    });
 
     return sidePanelContent ?? Text('Bezig met laden');
   }
@@ -138,7 +151,7 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
     super.initState();
   }
 
-  Future<Widget> createSidePanel() async {
+  Future<Widget> createSidePanel(String focusPid) async {
     var entryWidgets = [];
     if (widget.route.tasks != null) {
       for (var item in widget.route.tasks!) {
@@ -179,8 +192,9 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
       }
     }
 
-    return SafeArea(
+    var area = SafeArea(
       child: CustomScrollView(
+        controller: scrollController,
         physics: null,
         slivers: [
           SliverPadding(padding: EdgeInsets.only(top: 20)),
@@ -195,6 +209,8 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
         ],
       ),
     );
+
+    return area;
   }
 
   Widget createPin(DestinationPin pin, Color backgroundColor,
@@ -204,7 +220,7 @@ abstract class BaseNavigationState extends State<BaseNavigation> {
         await ScreenBrightness().setScreenBrightness(1.0);
 
         await SideSheet.right(
-            body: getSidePanelContentOrLoadingMessage(),
+            body: await getSidePanelContentOrLoadingMessage(pin.pid!),
             context: context,
             width: MediaQuery.of(context).size.width * 0.85);
 

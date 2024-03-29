@@ -1,8 +1,0 @@
-Uitbreiding op de bezorging app van Storegear die ik gebruik bij DHL als bezorger.
-De app gebruikt HERE voor kaart en route weergave. OpenStreetMap implementatie is WIP. 
-SDK van HERE zit niet in repo.
-
-Deze app gebruikt de API dhlapis.com
-
-
-

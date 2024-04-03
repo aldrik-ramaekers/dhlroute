@@ -23,7 +23,7 @@ class StoregearApiService extends IStoregearApiService {
     }
 
     final response = await http.post(
-        Uri.parse('http://dhlapis.com/delivery/v1/users/login?env_type=PROD'),
+        Uri.parse('https://storegear-app.dhlparcel.nl/delivery/v1/users/login?env_type=PROD'),
         headers: {'X-REQ-UUID': Uuid().v1()},
         body: jsonEncode(req));
 
@@ -58,7 +58,7 @@ class StoregearApiService extends IStoregearApiService {
     }
 
     final response = await http.get(
-        Uri.parse('http://dhlapis.com/delivery/v1/routes'),
+        Uri.parse('https://storegear-app.dhlparcel.nl/delivery/v1/routes'),
         headers: {'X-API-KEY': apiKey, 'X-REQ-UUID': Uuid().v1()});
 
     try {
@@ -89,7 +89,7 @@ class StoregearApiService extends IStoregearApiService {
 
     final response = await http.get(
         Uri.parse(
-            'http://dhlapis.com/delivery/v1/routes/' + tripkey.toString()),
+            'https://storegear-app.dhlparcel.nl/delivery/v1/routes/' + tripkey.toString()),
         headers: {'X-API-KEY': apiKey, 'X-REQ-UUID': Uuid().v1()});
 
     try {

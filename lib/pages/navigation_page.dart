@@ -152,6 +152,7 @@ class _NavigationPageState extends State<NavigationPage> {
                 splashColor: Colors.blue,
                 onLongPress: () => _mockStopInComplete(),
                 child: FloatingActionButton(
+                  heroTag: 'xx6',
                   onPressed: () => _mockStopComplete(),
                   child: Icon(Icons.check_circle),
                 ),
@@ -160,6 +161,7 @@ class _NavigationPageState extends State<NavigationPage> {
                 visible:
                     navigation == null ? false : navigation!.isLookingAround,
                 child: FloatingActionButton(
+                  heroTag: 'xx7',
                   backgroundColor: Colors.green,
                   child: const Icon(Icons.center_focus_strong),
                   onPressed: () => {
@@ -170,11 +172,13 @@ class _NavigationPageState extends State<NavigationPage> {
               ),
               Padding(padding: EdgeInsets.all(5)),
               FloatingActionButton(
+                heroTag: 'xx8',
                 onPressed: () => _zoomOut(),
                 child: Icon(Icons.zoom_out),
               ),
               Padding(padding: EdgeInsets.all(2)),
               FloatingActionButton(
+                heroTag: 'xx9',
                 onPressed: () => _zoomIn(),
                 child: Icon(Icons.zoom_in),
               ),

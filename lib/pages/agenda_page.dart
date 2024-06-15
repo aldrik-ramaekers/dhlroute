@@ -60,7 +60,7 @@ class _AgendaPageState extends State<AgendaPage> {
           break;
       }
 
-      ShiftType type = DefaultConfig.shiftTypes[currentSelectedShiftIndex];
+      ShiftType type = DefaultConfig.shiftTypes[0];
       dayOfWeek = dayOfWeek.add(
           dayOfWeek.weekday != 6 ? type.startTime : type.startTimeSaturday);
 
@@ -115,7 +115,7 @@ class _AgendaPageState extends State<AgendaPage> {
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
-            title: Text("Wanneer wil je werken?"),
+            title: Text("Wanneer ga je werken?"),
             content: Row(children: [
               !splitDays
                   ? (ToggleButtons(
@@ -159,24 +159,6 @@ class _AgendaPageState extends State<AgendaPage> {
                       isSelected: dayIsSelected.getRange(4, 7).toList(),
                     ))
                   : (Padding(padding: const EdgeInsets.all(20))),
-              ToggleButtons(
-                direction: Axis.vertical,
-                children: <Widget>[
-                  for (int i = 0; i < DefaultConfig.shiftTypes.length; i++)
-                    Padding(
-                        padding: const EdgeInsets.all(0),
-                        child: Text(DefaultConfig.shiftTypes[i].name)),
-                ],
-                onPressed: (int index) {
-                  setState(() {
-                    shiftsSelected =
-                        DefaultConfig.shiftTypes.map((e) => false).toList();
-                    shiftsSelected[index] = true;
-                    currentSelectedShiftIndex = index;
-                  });
-                },
-                isSelected: shiftsSelected,
-              ),
             ]),
             actions: [
               cancelButton,
@@ -250,7 +232,7 @@ class _AgendaPageState extends State<AgendaPage> {
           await showAddShiftDialog();
           eventBus.fire(RefreshWeekEvent());
         },
-        backgroundColor: Style.titleColor,
+        backgroundColor: Colors.green,
         child: const Icon(Icons.add),
       ),
     );

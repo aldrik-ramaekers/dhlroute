@@ -154,13 +154,6 @@ class _AgendaWeekState extends State<AgendaWeek> {
 
   Widget getData() {
     return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/goals/' + getBackgroundImage()),
-          fit: BoxFit.cover,
-          opacity: 0.3,
-        ),
-      ),
       child: getLoadingScreenOrDataList(),
     );
   }

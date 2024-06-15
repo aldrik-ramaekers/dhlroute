@@ -56,14 +56,25 @@ class _LogbookPageState extends State<LogbookPage> {
   }
 
   void sortShifts(List<Shift> shifts) {
+
     months = [];
     for (var shift in shifts) {
-      DateTime firstDayOfMonth =
-          DateUtilities.DateUtils.firstDayOfMonth(shift.start);
+      DateTime yearJanFirst = DateUtilities.DateTimeUtils.firstDayOfYear(shift.start);
+      List<DateTime> blockStartTimes = [];
+      late DateTime shiftBlock;
+
+      for (int i = 0; i < 13; i++) {
+        blockStartTimes.add(yearJanFirst);
+        yearJanFirst = yearJanFirst.add(Duration(days: 28));
+        if (yearJanFirst.compareTo(shift.start) >= 1) {
+          shiftBlock = blockStartTimes.last;
+          break;
+        }
+      }
 
       bool found = false;
       for (var month in months!) {
-        if (month.firstDayOfMonth == firstDayOfMonth) {
+        if (month.firstDayOfMonth == shiftBlock) {
           updateMonthData(month, shift);
           found = true;
         }
@@ -71,7 +82,7 @@ class _LogbookPageState extends State<LogbookPage> {
 
       if (!found) {
         months!
-            .add(MonthData(firstDayOfMonth: firstDayOfMonth, shifts: [shift]));
+            .add(MonthData(firstDayOfMonth: shiftBlock, shifts: [shift]));
       }
     }
 
@@ -122,9 +133,8 @@ class _LogbookPageState extends State<LogbookPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateHelper.getMonthName(month.firstDayOfMonth.month) +
-                            ' ' +
-                            month.firstDayOfMonth.year.toString(),
+                        month.firstDayOfMonth.day.toString() +"/"+ month.firstDayOfMonth.month.toString()+"/"+ month.firstDayOfMonth.year.toString() + " -> " +
+                        month.firstDayOfMonth.add(Duration(days: 28)).day.toString() +"/"+ month.firstDayOfMonth.add(Duration(days: 28)).month.toString()+"/"+ month.firstDayOfMonth.add(Duration(days: 28)).year.toString(),
                         style: TextStyle(
                             color: Colors.black, fontWeight: FontWeight.bold),
                       ),
@@ -153,10 +163,6 @@ class _LogbookPageState extends State<LogbookPage> {
                       Padding(
                           padding:
                               EdgeInsets.only(left: 5, bottom: 5, right: 5)),
-                      Text('Per uur: €' +
-                          month.calculateHourlyRate().toStringAsFixed(2)),
-                      Text('Verdiend: €' +
-                          month.actualSalary.toStringAsFixed(2)),
                       Padding(
                           padding:
                               EdgeInsets.only(left: 5, bottom: 5, right: 5)),
@@ -164,10 +170,6 @@ class _LogbookPageState extends State<LogbookPage> {
                   ),
                   Expanded(
                     child: Text(''),
-                  ),
-                  OutlinedButton(
-                    child: Icon(Icons.edit),
-                    onPressed: () => {requestMonthInfo(month)},
                   ),
                 ],
               ),
@@ -218,13 +220,6 @@ class _LogbookPageState extends State<LogbookPage> {
     return Container(
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height,
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/logbookbg.jpg'),
-          fit: BoxFit.cover,
-          opacity: 0.3,
-        ),
-      ),
       child: getLoadingScreenOrDataList(),
     );
   }

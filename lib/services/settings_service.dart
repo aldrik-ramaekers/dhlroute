@@ -22,7 +22,7 @@ class Settings {
 }
 
 class DefaultSettings extends Settings {
-  DefaultSettings() : super(salary: 13.75, version: '1.13.7-prod');
+  DefaultSettings() : super(salary: 14.5, version: '1.13.7-prod');
 
   DefaultSettings.fromJson(Map<String, dynamic> json) : super.fromJson(json);
 

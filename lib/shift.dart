@@ -179,7 +179,7 @@ class Shift {
       case ShiftStatus.OldOpen:
         return Colors.orange;
       case ShiftStatus.Open:
-        return Colors.red;
+        return Colors.blue;
       case ShiftStatus.Closed:
         return Colors.green;
       case ShiftStatus.Invalid:

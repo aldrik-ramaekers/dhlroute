@@ -88,15 +88,6 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-          ListTile(
-            title: const Text('Blacklist'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => BlacklistPage()),
-              );
-            },
-          ),
         ],
       ),
     );
@@ -123,10 +114,6 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
             label: 'Registratie',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.pin_drop),
-            label: 'Bezorging',
           ),
         ],
         currentIndex: _selectedIndex,

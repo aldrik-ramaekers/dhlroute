@@ -48,14 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 decoration: InputDecoration(
                   labelText: 'Huidige uurloon',
                 ),
-              ),
-               TextField(
-                decoration: InputDecoration(labelText: "Versie"),
-                keyboardType: TextInputType.text,
-                controller: versionController,
-                onChanged: ((value) => {
-                  widget.settings.version = value
-                }),
+            
               ),
               Padding(padding: const EdgeInsets.all(0)),
               TextButton(

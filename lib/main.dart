@@ -43,19 +43,6 @@ void main() {
 void _initializeHERESDK() async {
   // Needs to be called before accessing SDKOptions to load necessary libraries.
   SdkContext.init(IsolateOrigin.main);
-
-  // Set your credentials for the HERE SDK.
-  String accessKeyId = "7AOr--BqzFzBELeBUXypqQ";
-  String accessKeySecret =
-      "27yrhnsn-in-FVLWie-DKmS44XWsyIVIhgkhbdZB5glP9vyY3dIuZDBq23LvH-UwslyRCHt7vkgJtwADxxq-AQ";
-  SDKOptions sdkOptions =
-      SDKOptions.withAccessKeySecret(accessKeyId, accessKeySecret);
-
-  try {
-    await SDKNativeEngine.makeSharedInstance(sdkOptions);
-  } on InstantiationException {
-    throw Exception("Failed to initialize the HERE SDK.");
-  }
 }
 
 final IRouteProviderService routeProvider = MockRouteProviderService();
@@ -96,7 +83,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DHL HourTracker',
+      title: 'Bessems HourTracker',
       theme: ThemeData(
         backgroundColor: Style.background,
       ),

@@ -142,9 +142,6 @@ class _DeveloperPageState extends State<DeveloperPage> {
               Text('Versie ' + program_version),
               Text('Bestanden: ' + file_count.toString()),
               ElevatedButton(
-                  onPressed: _toggleDebugMode,
-                  child: Text('Test Modus: ' + debug_mode.toString())),
-              ElevatedButton(
                   onPressed: _exportLocalFiles, child: Text('Export'))
               /*
               TextButton(

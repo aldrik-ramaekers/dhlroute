@@ -46,9 +46,7 @@ class _AgendaWeekTitleState extends State<AgendaWeekTitle> {
                       " " +
                       DateHelper.getMonthName(this.widget.mondayOfWeek.month) +
                       " " +
-                      this.widget.mondayOfWeek.year.toString() +
-                      " | " +
-                      _printDuration(widget.hoursWorked),
+                      this.widget.mondayOfWeek.year.toString(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   )),

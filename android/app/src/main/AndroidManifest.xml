@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.example.dhl_schemaplanner">
+	package="com.example.bessems_schemaplanner">
 	<uses-permission android:name="android.permission.USE_FINGERPRINT" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -12,7 +12,7 @@
 	<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 	<application
-		android:label="DHL Schema"
+		android:label="Bessems Schema"
 		android:icon="@mipmap/ic_launcher">
 		<service android:name="com.pravera.flutter_foreground_task.service.ForegroundService" />
 

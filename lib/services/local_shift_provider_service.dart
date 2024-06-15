@@ -40,7 +40,7 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   LocalShiftProviderService() {
     getPastShifts()
-        .then((value) async => {if (value.isEmpty) await loadOldData()});
+        .then((value) async => {});
   }
 
   Future<Directory> get _localDir async {
@@ -70,7 +70,7 @@ class LocalShiftProviderService extends IProgramProviderService {
 
   Future<File> _localFile(String postfix) async {
     final path = await _localPath;
-    String fullPath = '$path/shifts_' + postfix + '.json';
+    String fullPath = '$path/bessems_shifts_' + postfix + '.json';
     File file = File(fullPath);
 
     bool exists = await file.exists();

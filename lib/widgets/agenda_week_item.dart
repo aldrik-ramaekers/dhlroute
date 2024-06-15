@@ -278,7 +278,7 @@ class _ExerciseEntryState extends State<AgendaWeekItem> {
 
     Widget shiftData = Container(
         child: Text(
-          '| ' + shiftTypeName,
+          '| ',
         ),
         width: widthOfShiftType);
     if (widthOfShiftType < 50) {

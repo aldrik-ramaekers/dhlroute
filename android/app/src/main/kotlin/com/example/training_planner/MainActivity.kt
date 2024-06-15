@@ -1,4 +1,4 @@
-package com.example.dhl_schemaplanner
+package com.example.bessems_schemaplanner
 
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterFragmentActivity

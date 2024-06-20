@@ -17,9 +17,9 @@ class DefaultConfig {
   static List<ShiftType> shiftTypes = [
     ShiftType(
         name: 'Dagrit',
-        startTime: Duration(hours: 10),
-        startTimeSaturday: Duration(hours: 10),
-        expectedDuration: Duration(hours: 7, minutes: 30)),
+        startTime: Duration(hours: 7, minutes: 30),
+        startTimeSaturday: Duration(hours: 7, minutes: 30),
+        expectedDuration: Duration(hours: 8, minutes: 30)),
     ShiftType(
         name: 'Avondrit',
         startTime: Duration(hours: 17),

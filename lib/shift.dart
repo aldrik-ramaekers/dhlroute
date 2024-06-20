@@ -110,7 +110,7 @@ class Shift {
     DateTime? endToCalculate = end;
     endToCalculate ??= expectedEndTime();
 
-    if (start.weekday == 6) {
+    /*if (start.weekday == 6) {
       return endToCalculate.difference(start).inMinutes *
           getMinutePayRate() *
           1.35;
@@ -119,7 +119,7 @@ class Shift {
       return endToCalculate.difference(start).inMinutes *
           getMinutePayRate() *
           2;
-    }
+    }*/
     return endToCalculate.difference(start).inMinutes * getMinutePayRate();
   }
 

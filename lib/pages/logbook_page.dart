@@ -31,6 +31,7 @@ class MonthData {
     totalWorkedTime = Duration();
     expectedSalary = 0;
     for (var shift in shifts) {
+      if (shift.end == null) continue;
       totalWorkedTime += shift.getElapsedSessionTime();
       expectedSalary += shift.getEarnedMoney();
     }
@@ -59,6 +60,8 @@ class _LogbookPageState extends State<LogbookPage> {
 
     months = [];
     for (var shift in shifts) {
+      if (shift.end == null) continue;
+
       DateTime yearJanFirst = DateUtilities.DateTimeUtils.firstDayOfYear(shift.start);
       List<DateTime> blockStartTimes = [];
       late DateTime shiftBlock;
